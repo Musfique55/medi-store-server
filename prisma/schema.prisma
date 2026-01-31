@@ -7,12 +7,26 @@ datasource db {
   provider = "postgresql"
 }
 
+enum roles {
+  customer
+  seller
+  admin
+}
+
+enum user_status {
+  ban
+  unban
+}
+
 model User {
   id            String    @id
   name          String
   email         String
   emailVerified Boolean   @default(false)
   image         String?
+  role          roles
+  status        user_status @default(unban)
+  phone         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
