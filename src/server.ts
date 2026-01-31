@@ -1,12 +1,23 @@
 import app from "./app";
+import { prisma } from "./lib/prisma";
 
 const PORT = process.env.PORT || 5000;
 
 
-app.get("/",(req,res) => {
-    res.status(200).send('hello world')
-})
 
-app.listen(PORT,() => {
-    console.log("port is running on",PORT);
-})
+const server = async() => {
+    try {
+        await prisma.$connect();
+        console.log("server is connected");
+        app.listen(PORT,() => {
+            console.log("server is running on",PORT);
+        })
+    } catch (error) {
+        console.log(error);
+        await prisma.$disconnect();
+        process.exit(1);
+    }
+}
+
+server();
+
