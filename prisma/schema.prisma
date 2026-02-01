@@ -8,9 +8,9 @@ datasource db {
 }
 
 enum roles {
-  customer
-  seller
-  admin
+  CUSTOMER
+  SELLER
+  ADMIN
 }
 
 enum user_status {
@@ -19,12 +19,12 @@ enum user_status {
 }
 
 model User {
-  id            String    @id
+  id            String    @id @unique
   name          String
-  email         String
+  email         String   @unique
   emailVerified Boolean   @default(false)
   image         String?
-  role          roles
+  role          roles @default(CUSTOMER)
   status        user_status @default(unban)
   phone         String?
   createdAt     DateTime  @default(now())
@@ -36,7 +36,6 @@ model User {
   orders        Order[]
   reviews       Review[]
 
-  @@unique([email,id])
   @@map("user")
 }
 
@@ -48,7 +47,7 @@ model Category{
   description String? @db.VarChar(100)
   icon_url String?
   slug String?
-  product_count Int
+  product_count Int @default(0)
   is_active Boolean @default(true)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -172,3 +171,4 @@ model Verification {
   @@index([identifier])
   @@map("verification")
 }
+
