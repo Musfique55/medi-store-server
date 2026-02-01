@@ -44,9 +44,19 @@ const deleteCategory = async (id:string) => {
     }
 }
 
+const getCategories = async () => {
+    try {
+        const result = await prisma.category.findMany();
+        return result;
+    } catch (error) {
+        throw error;
+    }
+}
+
 
 export const categoryServices = {
     createCategory,
     updateCategory,
-    deleteCategory
+    deleteCategory,
+    getCategories
 }

@@ -8,5 +8,6 @@ const routes = Router();
 routes.post("/",auth(roles.ADMIN),categoryController.createCategory);
 routes.put("/update/:id",auth(roles.ADMIN),categoryController.updateCategory);
 routes.delete("/delete/:id",categoryController.deleteCategory);
+routes.get("/",auth(roles.ADMIN),categoryController.getCategories);
 
 export const categoryRoutes = routes;

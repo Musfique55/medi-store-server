@@ -51,9 +51,27 @@ const deleteCategory : RequestHandler = async (req,res) => {
     }
 }
 
+const getCategories : RequestHandler = async (req,res) => {
+    try {
+       
+        const result = await categoryServices.getCategories();
+        res.status(200).json({
+            message : "Category deleted successfully",
+            success : true,
+            data : result
+        });
+    } catch (error : any) {
+        res.status(error.status || 500).json({
+            message : error.message,
+            success : false
+        })
+    }
+}
+
 
 export const categoryController = {
     createCategory,
     updateCategory,
-    deleteCategory
+    deleteCategory,
+    getCategories
 }
