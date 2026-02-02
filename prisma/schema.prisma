@@ -18,7 +18,7 @@ enum user_status {
   unban
 }
 
-enum OrderStatus {
+ enum OrderStatus {
   PENDING
   CONFIRMED
   SHIPPED

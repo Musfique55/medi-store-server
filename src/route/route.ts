@@ -12,6 +12,6 @@ routes.use("/admin/users",userRoutes);
 routes.use("/seller/medicines",medicineRoutes);
 routes.use("/admin/categories",categoryRoutes);
 routes.use("/admin/manufacturer",manufacturerRoutes);
-routes.use("/order",orderRoutes);
+routes.use("/orders",orderRoutes);
 
 export const routeHandlers = routes;
