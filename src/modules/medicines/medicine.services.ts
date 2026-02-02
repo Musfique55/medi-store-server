@@ -4,31 +4,31 @@ import { prisma } from "../../lib/prisma";
 
 const createMedicine = async (data: Medicine) => {
   try {
-    const [medicine, updateCount] = await prisma.$transaction([
-      prisma.medicine.create({
-        data,
-      }),
-      prisma.category.update({
-        where: {
-          id: data.category_id,
+    const medicine = await prisma.$transaction(async(tx) => {
+       await tx.medicine.create({
+        data
+      });
+      await tx.category.update({
+        where : {
+          id : data.category_id
         },
-        data: {
-          product_count: {
-            increment: 1,
-          },
+        data : {
+          product_count : {
+            increment : 1
+          }
+        }
+      });
+      await tx.manufacturer.update({
+        where : {
+          id : data.manufacturer_id
         },
-      }),
-      prisma.manufacturer.update({
-        where: {
-          id: data.manufacturer_id,
-        },
-        data: {
-          medicine_count: {
-            increment: 1,
-          },
-        },
-      }),
-    ]);
+        data : {
+          medicine_count : {
+            increment : 1
+          }
+        }
+      });
+    });
 
     return medicine;
   } catch (error) {
