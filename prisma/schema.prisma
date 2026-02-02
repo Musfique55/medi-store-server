@@ -66,8 +66,11 @@ model Medicine{
   category Category @relation(fields: [category_id],references: [id])
   name String @unique
   description String
-  retails_price Decimal
-  unit_price Decimal
+  retails_price Decimal @db.Decimal(10,2)
+  manufacturer_id String
+  manufacturer Manufacturer @relation(fields: [manufacturer_id],references: [id]) 
+  unit_price Decimal @db.Decimal(10,2)
+  stock Int
   image_url String[]
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -78,11 +81,29 @@ model Medicine{
   @@index([id,category_id,seller_id])
 }
 
+model Manufacturer {
+  id String @id @default(uuid())
+  name String 
+  description String
+  logo_url String?
+  country String
+  is_active Boolean
+  medicine_count Int @default(0)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+
+  medicines Medicine[]
+
+  @@map("manufacturer")
+  @@index([id,name])
+}
+
 model Order {
   id String @id @default(uuid())
   customer_id String
   Customer User @relation(fields: [customer_id],references: [id])
-  total_amount Decimal
+  total_amount Decimal @db.Decimal(10,2)
   order_status String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -93,6 +114,8 @@ model Order {
   @@index([id,customer_id])
 }
 
+
+
 model OrderItems {
   id String @id @default(uuid())
   order_id String
@@ -100,7 +123,7 @@ model OrderItems {
   product_id String
   Product Medicine @relation(fields: [product_id],references: [id])
   quantity Int
-  unit_price Decimal
+  unit_price Decimal @db.Decimal(10,2)
   created_at DateTime @default(now())
 
   @@map("order_items")

@@ -1,5 +1,6 @@
 import { RequestHandler } from "express";
 import { medicineServices } from "./medicine.services";
+import { date } from "better-auth";
 
 
 const createMedicine : RequestHandler = async (req,res) => {
@@ -18,7 +19,101 @@ const createMedicine : RequestHandler = async (req,res) => {
     }
 }
 
+const getMedicines : RequestHandler = async (req,res) => {
+    try {
+        const category = req.query.category? req.query.category?.toString().split("-").join(" ") : undefined;
+        const minPrice = req.query.minPrice ? Number(req.query.minPrice) : undefined;
+        const maxPrice = req.query.maxPrice ? Number(req.query.maxPrice) : undefined;
+        const manufacturer = req.query.manufacturer ? req.query.manufacturer?.toString().split("-").join(" ") : undefined;
+        
+        const result = await medicineServices.getMedicines(category,minPrice,maxPrice,manufacturer as string);
+        res.status(200).json({
+            message : "medicines fetched successfully",
+            success : true,
+            data : result
+        })
+    } catch (error : any) {
+        res.status(error.status || 500).json({
+            message : error.message,
+            success : false
+        })
+    }
+}
+
+const updateMedicine  : RequestHandler = async (req,res) => {
+    try {
+        const {id} = req.params;
+        const result = await medicineServices.updateMedicine(id as string,req.body);
+        res.status(201).json({
+            message : "medicine info updated successfully",
+            success : true,
+            data : result
+        })
+    } catch (error : any) {
+        res.status(error.status || 500).json({
+            message : error.message,
+            success : false
+        })
+    }
+}
+
+const updateStocks  : RequestHandler = async (req,res) => {
+    try {
+        const {id} = req.params;
+        const result = await medicineServices.updateStocks(id as string,req.body);
+        res.status(201).json({
+            message : "medicine stock successfully",
+            success : true,
+            data : result
+        })
+    } catch (error : any) {
+        res.status(error.status || 500).json({
+            message : error.message,
+            success : false
+        })
+    }
+}
+
+const getMedicine  : RequestHandler = async (req,res) => {
+    try {
+        const {id} = req.params;
+        const result = await medicineServices.getMedicine(id as string);
+        res.status(200).json({
+            message : "medicine fetched successfully",
+            success : true,
+            data : result
+        })
+    } catch (error : any) {
+        res.status(error.status || 500).json({
+            message : error.message,
+            success : false
+        })
+    }
+}
+const deleteMedicine  : RequestHandler = async (req,res) => {
+    try {
+        const {id} = req.params;
+         await medicineServices.deleteMedicine(id as string);
+        res.status(201).json({
+            message : "medicine deleted successfully",
+            success : true,
+        })
+    } catch (error : any) {
+        res.status(error.status || 500).json({
+            message : error.message,
+            success : false
+        })
+    }
+}
+
+
+
 
 export const medicineController = {
-    createMedicine
+    createMedicine,
+    getMedicines,
+    getMedicine,
+    updateStocks,
+    updateMedicine,
+    deleteMedicine
 }
