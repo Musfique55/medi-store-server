@@ -105,6 +105,8 @@ model Order {
   Customer User @relation(fields: [customer_id],references: [id])
   total_amount Decimal @db.Decimal(10,2)
   order_status String
+  delivery_method String @default("Cash on Delivery")
+  shipping_address String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   order_items OrderItems[]
