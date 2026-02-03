@@ -8,10 +8,10 @@ import { orderRoutes } from "../modules/orders/orders.routes";
 const routes = Router();
 
 
-routes.use("/admin/users",userRoutes);
-routes.use("/seller/medicines",medicineRoutes);
-routes.use("/admin/categories",categoryRoutes);
-routes.use("/admin/manufacturer",manufacturerRoutes);
+routes.use("/users",userRoutes);
+routes.use("/medicines",medicineRoutes);
+routes.use("/categories",categoryRoutes);
+routes.use("/manufacturer",manufacturerRoutes);
 routes.use("/orders",orderRoutes);
 
 export const routeHandlers = routes;
