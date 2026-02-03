@@ -86,11 +86,27 @@ const getOrderDetails : RequestHandler = async (req,res) => {
         })
     }
 }
+const getAllOrders : RequestHandler = async (req,res) => {
+    try {
+        const result = await orderServices.getAllOrders();
+        res.status(200).json({
+            message : "Order fetched successfully",
+            success : true,
+            data : result
+        })
+    } catch (error : any) {
+        res.json(error.status || 500).json({
+            message : error.message || "Server internal error",
+            success : false
+        })
+    }
+}
 
 export const orderController = {
     newOrder,
     updateOrderStatus,
     getSellersOrder,
     getUserOrders,
-    getOrderDetails
+    getOrderDetails,
+    getAllOrders
 }

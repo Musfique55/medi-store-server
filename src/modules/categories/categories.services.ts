@@ -15,11 +15,11 @@ const createCategory = async (data : Category) => {
 
 const updateCategory = async (id:string,data : Category) => {
     try {
-        const {id,author_id,...updatedData} = data;
+        const {id : category_id,author_id,...updatedData} = data;
 
         const result = await prisma.category.update({
             where : {
-                id
+                 id : category_id
             },
             data : updatedData
         })

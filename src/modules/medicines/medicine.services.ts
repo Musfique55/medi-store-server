@@ -94,6 +94,14 @@ const getMedicines = async (
           category: true,
           manufacturer: true,
           seller: isSellerView,
+          reviews : {
+            select : {
+              id : true,
+              image_url : true,
+              rating : true,
+              description : true
+            }
+          }
         },
         omit: isSellerView ? baseOmits : {...baseOmits,unit_price : true}
       });
@@ -129,6 +137,14 @@ const getMedicine = async (medicine_id: string) => {
       },
       include: {
         manufacturer: true,
+        reviews : {
+            select : {
+              id : true,
+              image_url : true,
+              rating : true,
+              description : true
+            }
+          }
       },
       omit: {
         manufacturer_id: true,

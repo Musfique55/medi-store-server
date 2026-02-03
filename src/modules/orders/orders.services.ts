@@ -29,6 +29,25 @@ const newOrder = async (data: CreateOrderInput) => {
   }
 };
 
+const getAllOrders = async() => {
+  try {
+    const data = await prisma.order.findMany({
+      include : {
+        customer : true,
+        order_items : {
+          include : {
+            product : true
+          }
+        },
+        reviews : true
+      }
+    });
+    return data;
+  } catch (error) {
+    throw error;
+  }
+}
+
 const updateOrderStatus = async (
   id: string,
   { status }: { status: OrderStatus },
@@ -170,5 +189,6 @@ export const orderServices = {
   updateOrderStatus,
   getSellersOrder,
   getUserOrders,
-  getOrderDetails
+  getOrderDetails,
+  getAllOrders
 };
