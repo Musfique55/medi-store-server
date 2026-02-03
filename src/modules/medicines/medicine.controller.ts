@@ -21,12 +21,16 @@ const createMedicine : RequestHandler = async (req,res) => {
 
 const getMedicines : RequestHandler = async (req,res) => {
     try {
+
+        const isSellerView = req.originalUrl.includes("/seller");
+
         const category = req.query.category? req.query.category?.toString().split("-").join(" ") : undefined;
         const minPrice = req.query.minPrice ? Number(req.query.minPrice) : undefined;
         const maxPrice = req.query.maxPrice ? Number(req.query.maxPrice) : undefined;
         const manufacturer = req.query.manufacturer ? req.query.manufacturer?.toString().split("-").join(" ") : undefined;
         
-        const result = await medicineServices.getMedicines(category,minPrice,maxPrice,manufacturer as string);
+        const result = await medicineServices.getMedicines(isSellerView,category,minPrice,maxPrice,manufacturer as string);
+
         res.status(200).json({
             message : "medicines fetched successfully",
             success : true,
@@ -77,7 +81,16 @@ const updateStocks  : RequestHandler = async (req,res) => {
 const getMedicine  : RequestHandler = async (req,res) => {
     try {
         const {id} = req.params;
+        const isSellerView = req.originalUrl.includes("/seller");
         const result = await medicineServices.getMedicine(id as string);
+        if(!isSellerView){
+           const {seller_id,unit_price,...publicResult} = result as any; 
+           return res.status(200).json({
+            message : "medicine fetched successfully",
+            success : true,
+            data : publicResult
+        });
+        }
         res.status(200).json({
             message : "medicine fetched successfully",
             success : true,

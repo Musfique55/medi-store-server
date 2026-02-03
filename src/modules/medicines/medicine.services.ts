@@ -4,29 +4,29 @@ import { prisma } from "../../lib/prisma";
 
 const createMedicine = async (data: Medicine) => {
   try {
-    const medicine = await prisma.$transaction(async(tx) => {
-       await tx.medicine.create({
-        data
+    const medicine = await prisma.$transaction(async (tx) => {
+      await tx.medicine.create({
+        data,
       });
       await tx.category.update({
-        where : {
-          id : data.category_id
+        where: {
+          id: data.category_id,
         },
-        data : {
-          product_count : {
-            increment : 1
-          }
-        }
+        data: {
+          product_count: {
+            increment: 1,
+          },
+        },
       });
       await tx.manufacturer.update({
-        where : {
-          id : data.manufacturer_id
+        where: {
+          id: data.manufacturer_id,
         },
-        data : {
-          medicine_count : {
-            increment : 1
-          }
-        }
+        data: {
+          medicine_count: {
+            increment: 1,
+          },
+        },
       });
     });
 
@@ -37,6 +37,7 @@ const createMedicine = async (data: Medicine) => {
 };
 
 const getMedicines = async (
+  isSellerView: boolean,
   category_slug?: string,
   minPrice: number = 0,
   maxPrice?: number,
@@ -44,6 +45,12 @@ const getMedicines = async (
 ) => {
   try {
     const filters: MedicineWhereInput[] = [];
+
+    const baseOmits = {
+      seller_id : true,
+      category_id : true,
+      manufacturer_id : true
+    }
 
     if (category_slug) {
       filters.push({
@@ -80,18 +87,16 @@ const getMedicines = async (
     }
 
     const result = await prisma.medicine.findMany({
-      where: {
-        AND: filters,
-      },
-      include: {
-        category: true,
-        manufacturer : true
-      },
-      omit: {
-        category_id: true,
-        manufacturer_id : true
-      },
-    });
+        where: {
+          AND: filters,
+        },
+        include: {
+          category: true,
+          manufacturer: true,
+          seller: isSellerView,
+        },
+        omit: isSellerView ? baseOmits : {...baseOmits,unit_price : true}
+      });
 
     return result;
   } catch (error) {
@@ -99,75 +104,72 @@ const getMedicines = async (
   }
 };
 
-const updateStocks = async (id : string,{stock} : {stock :number}) => {
-    try {
-        const updatedStock = await prisma.medicine.update({
-            where : {
-                id
-            },
-            data : {
-                stock
-            }
-        });
+const updateStocks = async (id: string, { stock }: { stock: number }) => {
+  try {
+    const updatedStock = await prisma.medicine.update({
+      where: {
+        id,
+      },
+      data: {
+        stock,
+      },
+    });
 
-        return updatedStock;
-    } catch (error) {
-        throw error;
-    }
-}
+    return updatedStock;
+  } catch (error) {
+    throw error;
+  }
+};
 
-const getMedicine = async (medicine_id : string) => {
-    try {
+const getMedicine = async (medicine_id: string) => {
+  try {
+    const medicine = await prisma.medicine.findUnique({
+      where: {
+        id: medicine_id,
+      },
+      include: {
+        manufacturer: true,
+      },
+      omit: {
+        manufacturer_id: true,
+      },
+    });
 
-        const medicine = await prisma.medicine.findUnique({
-            where : {
-                id : medicine_id
-            },
-            include : {
-                manufacturer : true
-            },
-            omit : {
-                manufacturer_id : true
-            }
-        });
+    return medicine;
+  } catch (error) {
+    throw error;
+  }
+};
 
-        return medicine;
-    } catch (error) {
-        throw error;
-    }
-}
+const updateMedicine = async (medicine_id: string, data: Medicine) => {
+  try {
+    const { id, seller_id, stock, ...remainingFields } = data;
 
-const updateMedicine = async (medicine_id : string,data : Medicine) => {
-    try {
-        const {id,seller_id,stock,...remainingFields} = data;
+    const updatedMedicine = await prisma.medicine.update({
+      where: {
+        id: medicine_id,
+      },
+      data: remainingFields,
+    });
 
-        const updatedMedicine = await prisma.medicine.update({
-            where : {
-                id : medicine_id
-            },
-            data : remainingFields
-        });
+    return updatedMedicine;
+  } catch (error) {
+    throw error;
+  }
+};
 
-        return updatedMedicine;
-    } catch (error) {
-        throw error;
-    }
-}
-
-const deleteMedicine = async (id : string) => {
-    try {
-        const deleted = await prisma.medicine.delete({
-            where : {
-                id
-            }
-        });
-        return deleted;
-    } catch (error) {
-        throw error;
-    }
-}
-
-
+const deleteMedicine = async (id: string) => {
+  try {
+    const deleted = await prisma.medicine.delete({
+      where: {
+        id,
+      },
+    });
+    return deleted;
+  } catch (error) {
+    throw error;
+  }
+};
 
 export const medicineServices = {
   createMedicine,
@@ -175,5 +177,5 @@ export const medicineServices = {
   getMedicines,
   updateStocks,
   updateMedicine,
-  deleteMedicine
+  deleteMedicine,
 };

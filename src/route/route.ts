@@ -9,7 +9,14 @@ const routes = Router();
 
 
 routes.use("/users",userRoutes);
+
+// public routes
 routes.use("/medicines",medicineRoutes);
+
+// seller routes
+routes.use("/seller/medicines",medicineRoutes);
+
+
 routes.use("/categories",categoryRoutes);
 routes.use("/manufacturer",manufacturerRoutes);
 routes.use("/orders",orderRoutes);
