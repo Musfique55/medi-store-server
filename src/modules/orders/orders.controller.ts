@@ -1,5 +1,7 @@
 import { RequestHandler } from "express";
 import { orderServices } from "./orders.services";
+import { auth } from "../../lib/auth";
+import { success } from "better-auth";
 
 
 const newOrder : RequestHandler = async(req,res) => {
@@ -35,7 +37,60 @@ const updateOrderStatus : RequestHandler = async(req,res) => {
     }
 }
 
+const getSellersOrder : RequestHandler = async (req,res) => {
+    try {
+        const session = await auth.api.getSession({headers : req.headers as any});
+        const result = await orderServices.getSellersOrder(session?.user.id as string);
+        res.status(200).json({
+            message : "Orders fetched successfully",
+            success : true,
+            data : result
+        })
+    } catch (error : any) {
+        res.json(error.status || 500).json({
+            message : error.message || "Server internal error",
+            success : false
+        })
+    }
+}
+const getUserOrders : RequestHandler = async (req,res) => {
+    try {
+        const session = await auth.api.getSession({headers : req.headers as any});
+        const result = await orderServices.getUserOrders(session?.user.id as string);
+        res.status(200).json({
+            message : "Orders fetched successfully",
+            success : true,
+            data : result
+        })
+    } catch (error : any) {
+        res.json(error.status || 500).json({
+            message : error.message || "Server internal error",
+            success : false
+        })
+    }
+}
+
+const getOrderDetails : RequestHandler = async (req,res) => {
+    try {
+        const {id} = req.params;
+        const result = await orderServices.getOrderDetails(id as string);
+        res.status(200).json({
+            message : "Order details fetched successfully",
+            success : true,
+            data : result
+        })
+    } catch (error : any) {
+        res.json(error.status || 500).json({
+            message : error.message || "Server internal error",
+            success : false
+        })
+    }
+}
+
 export const orderController = {
     newOrder,
-    updateOrderStatus
+    updateOrderStatus,
+    getSellersOrder,
+    getUserOrders,
+    getOrderDetails
 }

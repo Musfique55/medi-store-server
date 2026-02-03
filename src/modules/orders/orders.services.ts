@@ -49,7 +49,126 @@ const updateOrderStatus = async (
   }
 };
 
+const getSellersOrder = async (seller_id : string) => {
+  try {
+    const result = await prisma.order.findMany({
+      where : {
+        order_items : {
+          some : {
+            product : {
+              seller_id : seller_id
+            }
+          }
+        },
+      },
+      include : {
+        customer : {
+          select : {
+            id : true,
+            email : true,
+            name : true,
+            phone : true
+          }
+        },
+        order_items : {
+          where : {
+            product : {
+              seller_id : seller_id
+            },
+          },
+          include : {
+            product : true
+          }
+        }
+      },
+      omit : {
+        customer_id : true
+      },
+      orderBy : {
+        created_at : "desc"
+      }
+    })
+
+
+    return result;
+  } catch (error) {
+    throw error;
+  }
+}
+
+const getUserOrders = async (user_id : string) => {
+  try {
+    const result = await prisma.order.findMany({
+      where : {
+        customer_id : user_id
+      },
+      include : {
+        order_items : {
+          select : {
+            product : {
+              omit : {
+                category_id : true,
+                unit_price : true,
+              }
+            },
+
+          }
+        }
+      },
+      omit : {
+        customer_id : true,
+      }
+      
+    })
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+const getOrderDetails = async (order_id : string) => {
+  try {
+    const orderDetails = await prisma.order.findUnique({
+      where : {
+        id : order_id
+      },
+      include : {
+        order_items : {
+          include : {
+            product : {
+              select : {
+               id : true,
+               name : true,
+               description : true,
+               image_url : true,
+               retails_price : true 
+              }
+            }
+          },
+          omit : {
+            order_id : true,
+           unit_price : true 
+          }
+        },
+      },
+      omit : {
+        customer_id : true,
+      }
+    })
+
+    return orderDetails;
+  } catch (error) {
+    throw error;
+  } 
+}
+
+
+
 export const orderServices = {
   newOrder,
   updateOrderStatus,
+  getSellersOrder,
+  getUserOrders,
+  getOrderDetails
 };

@@ -3,22 +3,28 @@ import { userRoutes } from "../modules/users/user.routes";
 import { medicineRoutes } from "../modules/medicines/medicine.routes";
 import { categoryRoutes } from "../modules/categories/categories.routes";
 import { manufacturerRoutes } from "../modules/manufacturer/manufacturer.route";
-import { orderRoutes } from "../modules/orders/orders.routes";
+import { customerOrderRoutes } from "../modules/orders/customer.orders.routes";
+import { sellerOrderRoutes } from "../modules/orders/seller.orders.route";
 
 const routes = Router();
 
+// admin routes
+routes.use("/admin/users",userRoutes);
+routes.use("/admin/categories",categoryRoutes);
+routes.use("/admin/manufacturer",manufacturerRoutes);
 
-routes.use("/users",userRoutes);
 
 // public routes
 routes.use("/medicines",medicineRoutes);
+routes.use("/categories",categoryRoutes);
+
 
 // seller routes
 routes.use("/seller/medicines",medicineRoutes);
+routes.use("/seller/orders",sellerOrderRoutes);
 
+// customer route
+routes.use("/orders",customerOrderRoutes);
 
-routes.use("/categories",categoryRoutes);
-routes.use("/manufacturer",manufacturerRoutes);
-routes.use("/orders",orderRoutes);
 
 export const routeHandlers = routes;
