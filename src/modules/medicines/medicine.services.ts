@@ -91,15 +91,20 @@ const getMedicines = async (
           AND: filters,
         },
         include: {
-          category: true,
-          manufacturer: true,
+          category: {
+            select : {
+              category_name : true
+            }
+          },
+          manufacturer: {
+            select : {
+              name : true
+            }
+          },
           seller: isSellerView,
           reviews : {
             select : {
-              id : true,
-              image_url : true,
               rating : true,
-              description : true
             }
           }
         },

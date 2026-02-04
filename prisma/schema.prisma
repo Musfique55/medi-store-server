@@ -13,6 +13,12 @@ enum roles {
   ADMIN
 }
 
+enum discountType {
+  NONE
+  PERCENTAGE
+  FIXED
+}
+
 enum user_status {
   ban
   unban
@@ -84,6 +90,8 @@ model Medicine{
   manufacturer_id String
   manufacturer Manufacturer @relation(fields: [manufacturer_id],references: [id]) 
   unit_price Decimal @db.Decimal(10,2)
+  discount_type discountType @default(NONE)
+  discount_value Int @default(0)
   stock Int
   image_url String[]
   order_items OrderItems[]
