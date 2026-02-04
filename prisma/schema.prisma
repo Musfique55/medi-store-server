@@ -89,9 +89,9 @@ model Medicine{
   retails_price Decimal @db.Decimal(10,2)
   manufacturer_id String
   manufacturer Manufacturer @relation(fields: [manufacturer_id],references: [id]) 
-  unit_price Decimal @db.Decimal(10,2)
+  purchase_price Decimal @db.Decimal(10,2)
   discount_type discountType @default(NONE)
-  discount_value Int @default(0)
+  discount_value Int? @default(0)
   stock Int
   image_url String[]
   order_items OrderItems[]
