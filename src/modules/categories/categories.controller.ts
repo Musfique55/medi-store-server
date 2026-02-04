@@ -56,7 +56,7 @@ const getCategories : RequestHandler = async (req,res) => {
        
         const result = await categoryServices.getCategories();
         res.status(200).json({
-            message : "Category deleted successfully",
+            message : "Categories fetched successfully",
             success : true,
             data : result
         });

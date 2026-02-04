@@ -46,7 +46,11 @@ const deleteCategory = async (id:string) => {
 
 const getCategories = async () => {
     try {
-        const result = await prisma.category.findMany();
+        const result = await prisma.category.findMany({
+            omit : {
+                author_id : true
+            }
+        });
         return result;
     } catch (error) {
         throw error;
