@@ -5,7 +5,7 @@ import { prisma } from "../../lib/prisma";
 const createMedicine = async (data: Medicine) => {
   try {
     const medicine = await prisma.$transaction(async (tx) => {
-      await tx.medicine.create({
+     const medicineData = await tx.medicine.create({
         data,
       });
       await tx.category.update({
@@ -28,6 +28,8 @@ const createMedicine = async (data: Medicine) => {
           },
         },
       });
+
+      return medicineData;
     });
 
     return medicine;
@@ -108,7 +110,7 @@ const getMedicines = async (
             }
           }
         },
-        omit: isSellerView ? baseOmits : {...baseOmits,unit_price : true}
+        omit: isSellerView ? baseOmits : {...baseOmits,purchase_price : true}
       });
 
     return result;
@@ -149,10 +151,20 @@ const getMedicine = async (medicine_id: string) => {
               rating : true,
               description : true
             }
+          },
+        category : {
+          select : {
+            id : true,
+            category_name : true,
+            description : true,
+            icon_url : true,
+            slug : true
           }
+        }  
       },
       omit: {
         manufacturer_id: true,
+        category_id : true,
       },
     });
 

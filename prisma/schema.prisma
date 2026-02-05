@@ -84,11 +84,11 @@ model Medicine{
   seller User @relation(fields: [seller_id],references: [id])
   category_id String
   category Category @relation(fields: [category_id],references: [id])
+  manufacturer_id String
+  manufacturer Manufacturer @relation(fields: [manufacturer_id],references: [id]) 
   name String @unique
   description String
   retails_price Decimal @db.Decimal(10,2)
-  manufacturer_id String
-  manufacturer Manufacturer @relation(fields: [manufacturer_id],references: [id]) 
   purchase_price Decimal @db.Decimal(10,2)
   discount_type discountType @default(NONE)
   discount_value Int? @default(0)
