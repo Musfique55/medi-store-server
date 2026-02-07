@@ -147,9 +147,11 @@ const getMedicine = async (medicine_id: string) => {
         reviews : {
             select : {
               id : true,
+              author : true,
               image_url : true,
               rating : true,
-              description : true
+              description : true,
+              created_at : true
             }
           },
         category : {
