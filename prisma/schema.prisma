@@ -33,6 +33,15 @@ enum user_status {
   RETURNED
 }
 
+enum DeliveryMethods { 
+  COD
+  ONLINE
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+}
 
 model User {
   id            String    @id @unique
@@ -125,19 +134,26 @@ model Manufacturer {
 
 model Order {
   id String @id @default(uuid())
+  order_number String @unique
   customer_id String
   customer User @relation(fields: [customer_id],references: [id])
+
+  subtotal Decimal @db.Decimal(10,2)
   total_amount Decimal @db.Decimal(10,2)
+  discount_amount Decimal @default(0)
+
   order_status OrderStatus @default(PENDING)
-  delivery_method String @default("Cash on Delivery")
-  shipping_address String
+  payment_status PaymentStatus @default(PENDING)
+  delivery_method DeliveryMethods @default(COD)
+
+  shipping_address Json
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   order_items OrderItems[]
   reviews Review[]
 
   @@map("order")
-  @@index([id,customer_id])
+  @@index([customer_id])
 }
 
 
