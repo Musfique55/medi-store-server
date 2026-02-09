@@ -1,4 +1,4 @@
-import {  Prisma } from "../generated/prisma/client";
+import {  discountType, Prisma } from "../generated/prisma/client";
 import { CreateOrderInput } from "../types/order";
 import { prisma } from "./prisma";
 
@@ -18,6 +18,8 @@ export const validateCart = async (items: CreateOrderInput) => {
         retails_price: true,
         stock: true,
         name: true,
+        discount_type : true,
+        discount_value : true
       },
     });
 
@@ -34,8 +36,21 @@ export const validateCart = async (items: CreateOrderInput) => {
         errors.push(`${dbProduct.name} is out of stock (Requested: ${item.quantity}, Available: ${dbProduct.stock}).`);
       }
 
-      if(!dbProduct.retails_price.equals(new Prisma.Decimal(item.unit_price))){
-        errors.push(`Price for ${dbProduct.name} has changed. Please refresh your cart.`);
+      if(dbProduct.discount_type === discountType.PERCENTAGE){
+        const discountedPrice = (Number(dbProduct.retails_price) - (Number(dbProduct.retails_price) * Number(dbProduct.discount_value)) / 100);
+
+        if(discountedPrice !== item.unit_price){
+          errors.push(`Price for ${dbProduct.name} has changed. Please refresh your cart.`);
+        }
+      }else if(dbProduct.discount_type === discountType.FIXED){
+        const discountedPrice = Number(dbProduct.retails_price) - Number(dbProduct.discount_value);
+        if(discountedPrice !== item.unit_price){
+          errors.push(`Price for ${dbProduct.name} has changed. Please refresh your cart.`);
+        }
+      }else{
+        if(!dbProduct.retails_price.equals(new Prisma.Decimal(item.unit_price))){
+          errors.push(`Price for ${dbProduct.name} has changed. Please refresh your cart.`);
+        }
       }
     }
 

@@ -1,19 +1,23 @@
 
-import { OrderStatus, Prisma } from "../../generated/prisma/client";
+import { DeliveryMethods, OrderStatus, Prisma } from "../../generated/prisma/client";
 import { prisma } from "../../lib/prisma";
 import { CreateOrderInput } from "../../types/order";
 
 const newOrder = async (data: CreateOrderInput) => {
   try {
-   
+   const date = new Date().toISOString().replace(/[-:.TZ]/g,"");
+
+   const generateOrderNumber = `order-${date}`;
 
     const ordered = await prisma.$transaction(async (tx) => {
       const ordered_items = await tx.order.create({
         data: {
           customer_id: data.customer_id,
+          order_number : generateOrderNumber,
+          subtotal : new Prisma.Decimal(data.total_amount),
           total_amount: new Prisma.Decimal(data.total_amount),
           shipping_address: data.shipping_address,
-          delivery_method: data.delivery_method || "Cash on Delivery",
+          delivery_method:  DeliveryMethods.COD,
           order_items: {
             create: data.order_items.map((item) => ({
               product_id: item.product_id,
@@ -46,10 +50,12 @@ const newOrder = async (data: CreateOrderInput) => {
             },
           });
           if (!update) throw new Error(`FAILED_PRODUCT_${item.product_id}`);
-          return update;
         }),
       );
+
+      return ordered_items;
     });
+    console.log(ordered);
 
     return ordered;
   } catch (error: any) {

@@ -7,6 +7,7 @@ const newOrder: RequestHandler = async (req, res) => {
   try {
     const validateErrors = await validateCart(req.body);
 
+
     if (validateErrors.length > 0) {
       return res.status(400).json({
         errors : validateErrors,

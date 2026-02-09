@@ -6,14 +6,15 @@ import cors from 'cors';
 
 const app = express();
 
-app.all("/api/auth/*splat",toNodeHandler(auth));
 
 
 app.use(cors({
-    origin : process.env.APP_URL as string,
-    credentials : true
+    origin : process.env.APP_URL,
+    credentials : true ,
 }))
 app.use(express.json());
+
+app.all("/api/auth/*splat",toNodeHandler(auth));
 
 app.get("/",(req,res) => {
     res.status(200).send('hello world')
