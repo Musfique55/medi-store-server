@@ -59,7 +59,7 @@ const getMedicines = async (
         OR: [
           {
             category: {
-              category_name: {
+              slug: {
                 contains: category_slug,
                 mode: "insensitive",
               },
@@ -90,12 +90,13 @@ const getMedicines = async (
 
     const result = await prisma.medicine.findMany({
         where: {
-          AND: filters,
+        AND : filters  
         },
         include: {
           category: {
             select : {
-              category_name : true
+              category_name : true,
+              slug : true
             }
           },
           manufacturer: {

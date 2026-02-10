@@ -1,6 +1,6 @@
 import { RequestHandler } from "express";
 import { medicineServices } from "./medicine.services";
-import { date } from "better-auth";
+
 
 
 const createMedicine : RequestHandler = async (req,res) => {
@@ -24,7 +24,7 @@ const getMedicines : RequestHandler = async (req,res) => {
 
         const isSellerView = req.originalUrl.includes("/seller");
 
-        const category = req.query.category? req.query.category?.toString().split("-").join(" ") : undefined;
+        const category = req.query.category? req.query.category?.toString() : undefined;
         const minPrice = req.query.minPrice ? Number(req.query.minPrice) : undefined;
         const maxPrice = req.query.maxPrice ? Number(req.query.maxPrice) : undefined;
         const manufacturer = req.query.manufacturer ? req.query.manufacturer?.toString().split("-").join(" ") : undefined;

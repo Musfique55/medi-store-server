@@ -74,7 +74,7 @@ model Category{
   category_name String @db.VarChar(50) @unique
   description String? @db.VarChar(100)
   icon_url String?
-  slug String?
+  slug String
   product_count Int @default(0)
   is_active Boolean @default(true)
   products Medicine[]
