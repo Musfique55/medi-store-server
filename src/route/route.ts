@@ -25,6 +25,7 @@ routes.use("/auth",authRoutes);
 // public routes
 routes.use("/medicines",medicineRoutes);
 routes.use("/categories",categoryRoutes);
+routes.use("/manufacturer",manufacturerRoutes);
 
 
 // seller routes

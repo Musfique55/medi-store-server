@@ -13,6 +13,16 @@ const createManufacturer = async (data: Manufacturer) => {
   }
 };
 
+const getManufacturers = async () => {
+  try {
+    const data = prisma.manufacturer.findMany();
+    return data;
+  } catch (error) {
+    throw error;
+  }
+}
+
 export const manufacturerService = {
-    createManufacturer
+    createManufacturer,
+    getManufacturers
 }

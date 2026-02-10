@@ -21,7 +21,8 @@ export const auth = betterAuth({
                 defaultValue : "CUSTOMER"
             },
             phone : {
-                type : "string"
+                type : "string",
+                required : false
             },
             status : {
                 type : "string",
