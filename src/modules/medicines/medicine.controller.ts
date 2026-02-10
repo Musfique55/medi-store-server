@@ -1,5 +1,6 @@
 import { RequestHandler } from "express";
 import { medicineServices } from "./medicine.services";
+import { getMaxPrice } from "../../lib/maxPrice";
 
 
 
@@ -31,11 +32,14 @@ const getMedicines : RequestHandler = async (req,res) => {
         
         const result = await medicineServices.getMedicines(isSellerView,category,minPrice,maxPrice,manufacturer as string);
 
+        const mx = await getMaxPrice();
+
         res.status(200).json({
             message : "medicines fetched successfully",
             success : true,
-            data : result
-        })
+            data : result,
+            max_price : mx
+        });
     } catch (error : any) {
         res.status(error.status || 500).json({
             message : error.message,

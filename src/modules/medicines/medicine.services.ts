@@ -5,7 +5,7 @@ import { prisma } from "../../lib/prisma";
 const createMedicine = async (data: Medicine) => {
   try {
     const medicine = await prisma.$transaction(async (tx) => {
-     const medicineData = await tx.medicine.create({
+      const medicineData = await tx.medicine.create({
         data,
       });
       await tx.category.update({
@@ -49,10 +49,10 @@ const getMedicines = async (
     const filters: MedicineWhereInput[] = [];
 
     const baseOmits = {
-      seller_id : true,
-      category_id : true,
-      manufacturer_id : true
-    }
+      seller_id: true,
+      category_id: true,
+      manufacturer_id: true,
+    };
 
     if (category_slug) {
       filters.push({
@@ -89,30 +89,30 @@ const getMedicines = async (
     }
 
     const result = await prisma.medicine.findMany({
-        where: {
-        AND : filters  
-        },
-        include: {
-          category: {
-            select : {
-              category_name : true,
-              slug : true
-            }
+      where: {
+        AND: filters,
+      },
+      include: {
+        category: {
+          select: {
+            category_name: true,
+            slug: true,
           },
-          manufacturer: {
-            select : {
-              name : true
-            }
-          },
-          seller: isSellerView,
-          reviews : {
-            select : {
-              rating : true,
-            }
-          }
         },
-        omit: isSellerView ? baseOmits : {...baseOmits,purchase_price : true}
-      });
+        manufacturer: {
+          select: {
+            name: true,
+          },
+        },
+        seller: isSellerView,
+        reviews: {
+          select: {
+            rating: true,
+          },
+        },
+      },
+      omit: isSellerView ? baseOmits : { ...baseOmits, purchase_price: true },
+    });
 
     return result;
   } catch (error) {
@@ -145,29 +145,29 @@ const getMedicine = async (medicine_id: string) => {
       },
       include: {
         manufacturer: true,
-        reviews : {
-            select : {
-              id : true,
-              author : true,
-              image_url : true,
-              rating : true,
-              description : true,
-              created_at : true
-            }
+        reviews: {
+          select: {
+            id: true,
+            author: true,
+            image_url: true,
+            rating: true,
+            description: true,
+            created_at: true,
           },
-        category : {
-          select : {
-            id : true,
-            category_name : true,
-            description : true,
-            icon_url : true,
-            slug : true
-          }
-        }  
+        },
+        category: {
+          select: {
+            id: true,
+            category_name: true,
+            description: true,
+            icon_url: true,
+            slug: true,
+          },
+        },
       },
       omit: {
         manufacturer_id: true,
-        category_id : true,
+        category_id: true,
       },
     });
 
