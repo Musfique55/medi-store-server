@@ -25,12 +25,13 @@ const getMedicines : RequestHandler = async (req,res) => {
 
         const isSellerView = req.originalUrl.includes("/seller");
 
-        const category = req.query.category? req.query.category?.toString() : undefined;
+        const category = req.query.category !== "undefined" ? req.query.category?.toString() : undefined;
         const minPrice = req.query.minPrice ? Number(req.query.minPrice) : undefined;
         const maxPrice = req.query.maxPrice ? Number(req.query.maxPrice) : undefined;
-        const manufacturer = req.query.manufacturer ? req.query.manufacturer?.toString().split("-").join(" ") : undefined;
+        const manufacturer = req.query.manufacturer !== "undefined" ? req.query.manufacturer?.toString().split("-").join(" ") : undefined;
+
         
-        const result = await medicineServices.getMedicines(isSellerView,category,minPrice,maxPrice,manufacturer as string);
+        const result = await medicineServices.getMedicines(isSellerView,category,minPrice,maxPrice,manufacturer);
 
         const mx = await getMaxPrice();
 

@@ -7,6 +7,8 @@ const routes = Router();
 
 // customer routes
 routes.get('/',auth(roles.CUSTOMER),orderController.getUserOrders);
+routes.get('/delivered',auth(roles.CUSTOMER),orderController.getDeliveredOrders);
+routes.get('/active-shipped',auth(roles.CUSTOMER),orderController.getActiveShippedOrders);
 routes.get('/:id',auth(roles.CUSTOMER),orderController.getOrderDetails);
 routes.post("/",auth(roles.CUSTOMER),orderController.newOrder);
 

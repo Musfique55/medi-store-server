@@ -91,6 +91,42 @@ const getUserOrders: RequestHandler = async (req, res) => {
     });
   }
 };
+const getDeliveredOrders: RequestHandler = async (req, res) => {
+  try {
+    const session = await auth.api.getSession({ headers: req.headers as any });
+    const result = await orderServices.getDeliveredOrders(
+      session?.user.id as string,
+    );
+    res.status(200).json({
+      message: "Orders fetched successfully",
+      success: true,
+      data: result,
+    });
+  } catch (error: any) {
+    res.json(error.status || 500).json({
+      message: error.message || "Server internal error",
+      success: false,
+    });
+  }
+};
+const getActiveShippedOrders: RequestHandler = async (req, res) => {
+  try {
+    const session = await auth.api.getSession({ headers: req.headers as any });
+    const result = await orderServices.getActiveShippedOrders(
+      session?.user.id as string,
+    );
+    res.status(200).json({
+      message: "Orders fetched successfully",
+      success: true,
+      data: result,
+    });
+  } catch (error: any) {
+    res.json(error.status || 500).json({
+      message: error.message || "Server internal error",
+      success: false,
+    });
+  }
+};
 
 const getOrderDetails: RequestHandler = async (req, res) => {
   try {
@@ -131,4 +167,6 @@ export const orderController = {
   getUserOrders,
   getOrderDetails,
   getAllOrders,
+  getActiveShippedOrders,
+  getDeliveredOrders
 };

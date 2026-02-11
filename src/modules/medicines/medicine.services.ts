@@ -47,7 +47,6 @@ const getMedicines = async (
 ) => {
   try {
     const filters: MedicineWhereInput[] = [];
-
     const baseOmits = {
       seller_id: true,
       category_id: true,
@@ -79,6 +78,7 @@ const getMedicines = async (
     }
 
     if (manufacturer) {
+
       filters.push({
         manufacturer: {
           name: {

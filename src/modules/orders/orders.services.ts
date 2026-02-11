@@ -76,7 +76,13 @@ const getAllOrders = async () => {
         reviews: true,
       },
     });
-    return data;
+
+    const formattedStructure = data.map((item) => ({
+      ...item,
+      order_items : item.order_items.map(o => o.product)
+    }))
+    
+    return formattedStructure;
   } catch (error) {
     throw error;
   }
@@ -150,7 +156,7 @@ const getSellersOrder = async (seller_id: string) => {
 
 const getUserOrders = async (user_id: string) => {
   try {
-    const result = await prisma.order.findMany({
+    const data = await prisma.order.findMany({
       where: {
         customer_id: user_id,
       },
@@ -170,12 +176,92 @@ const getUserOrders = async (user_id: string) => {
         customer_id: true,
       },
     });
-    return result;
+    
+    const formattedStructure = data.map((item) => ({
+      ...item,
+      order_items : item.order_items.map(o => o.product)
+    }))
+    
+    return formattedStructure;
   } catch (error) {
     console.log(error);
     throw error;
   }
 };
+
+const getDeliveredOrders = async (user_id: string) => {
+  try {
+    const data = await prisma.order.findMany({
+      where: {
+        customer_id: user_id,
+        order_status : "DELIVERED"
+      },
+      include: {
+        order_items: {
+          select: {
+            product: {
+              omit: {
+                category_id: true,
+                purchase_price: true,
+              },
+            },
+          },
+        },
+      },
+      omit: {
+        customer_id: true,
+      },
+    });
+    
+    const formattedStructure = data.map((item) => ({
+      ...item,
+      order_items : item.order_items.map(o => o.product)
+    }))
+    
+    return formattedStructure;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+const getActiveShippedOrders = async (user_id: string) => {
+  try {
+    const data = await prisma.order.findMany({
+      where: {
+        customer_id: user_id,
+        order_status : "SHIPPED"
+      },
+      include: {
+        order_items: {
+          select: {
+            product: {
+              omit: {
+                category_id: true,
+                purchase_price: true,
+              },
+            },
+          },
+        },
+      },
+      omit: {
+        customer_id: true,
+      },
+    });
+    
+    const formattedStructure = data.map((item) => ({
+      ...item,
+      order_items : item.order_items.map(o => o.product)
+    }))
+    
+    return formattedStructure;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+
 
 const getOrderDetails = async (order_id: string) => {
   try {
@@ -220,4 +306,6 @@ export const orderServices = {
   getUserOrders,
   getOrderDetails,
   getAllOrders,
+  getActiveShippedOrders,
+  getDeliveredOrders
 };
