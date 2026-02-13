@@ -6,8 +6,6 @@ import cors from 'cors';
 
 const app = express();
 
-
-
 app.use(cors({
     origin : process.env.APP_URL,
     credentials : true ,
@@ -18,7 +16,7 @@ app.all("/api/auth/*splat",toNodeHandler(auth));
 
 app.get("/",(req,res) => {
     res.status(200).send('hello world')
-})
+});
 
 app.use("/api/v1",routeHandlers);
 

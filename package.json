@@ -7,9 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "npx tsx watch src/server.ts",
     "seed:admin": "npx tsx src/scripts/index.ts",
-    "build": "npx prisma generate && tsc", 
-    "postinstall": "prisma generate"
-
+    "build": "prisma generate && prisma migrate deploy && tsup src/app.ts --format esm --platform node --target node20 --outDir dist",
+    "start": "node dist/server.js"
   },
   "keywords": [],
   "author": "",
@@ -22,7 +21,8 @@
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
-    "pg": "^8.18.0"
+    "pg": "^8.18.0",
+    "tsup": "^8.5.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
