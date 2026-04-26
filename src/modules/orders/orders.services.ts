@@ -225,12 +225,12 @@ const getDeliveredOrders = async (user_id: string) => {
   }
 };
 
-const getActiveShippedOrders = async (user_id: string) => {
+const getOrdersByStatus = async (user_id: string,status : OrderStatus) => {
   try {
     const data = await prisma.order.findMany({
       where: {
         customer_id: user_id,
-        order_status : "SHIPPED"
+        order_status : status
       },
       include: {
         order_items: {
@@ -306,6 +306,6 @@ export const orderServices = {
   getUserOrders,
   getOrderDetails,
   getAllOrders,
-  getActiveShippedOrders,
+  getOrdersByStatus,
   getDeliveredOrders
 };
