@@ -1,52 +1,66 @@
 import { NextFunction, Request, Response } from "express";
 import { roles } from "../generated/prisma/enums";
-import { auth as betterAuth } from "../lib/auth";
+import { AppError } from "../helper/AppError";
+import { prisma } from "../lib/prisma";
+import { cookieUtils } from "../utils/cookieUtils";
+import { jwtUtils } from "../utils/jwtUtils";
 
-
-declare global{
-    namespace Express{
-        interface Request{
-            user?: {
-                name : string,
-                email : string,
-                role : string,
-                id : string,
-            }
-        }
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        name: string;
+        email: string;
+        role: string;
+        id: string;
+      };
     }
+  }
 }
 
 export const auth = (...roles: roles[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const session = await betterAuth.api.getSession({
-        headers: req.headers as any,
+      const currentSessionToken =
+        req.cookies["better-auth.session_token"] ||
+        req.cookies["_Secure-better-auth.session_token"];
+
+      if (!currentSessionToken) {
+        throw new AppError("unauthorized", 401);
+      }
+
+      const session = await prisma.session.findUniqueOrThrow({
+        where: {
+          token: currentSessionToken,
+        },
+        include: {
+          user: true,
+        },
       });
 
-      if (!session) {
-        res.status(401).json({
-          message: "unauthorized",
-          success: false,
-          status: 401,
-        });
-        return;
+      if (session && session.user) {
+        if (roles.length > 0 && !roles.includes(session.user.role as roles)) {
+          throw new AppError("Forbidden : Insufficient permissions", 403);
+        }
+      }
+
+      const accessToken = cookieUtils.getCookie(req, "accessToken");
+      if (!accessToken && req.url !== "/refresh-token") {
+        throw new AppError("unauthorized", 401);
+      }
+
+      const verifiedToken = jwtUtils.verifyToken(accessToken);
+
+      if(!verifiedToken && req.url !== "/refresh-token"){
+        throw new AppError("unauthorized", 401);
       }
 
       req.user = {
-        name : session.user.name,
-        email : session.user.email,
+        name: session.user.name,
+        email: session.user.email,
         id: session.user.id,
-        role : session.user.role as string
-      }
-
-      if (!session.user.role || !roles.includes(session.user.role as roles)) {
-        res.status(403).json({
-          message: "forbidden",
-          success: false,
-          status: 403,
-        });
-        return;
-      }
+        role: session.user.role as string,
+      };
 
       next();
     } catch (error: any) {

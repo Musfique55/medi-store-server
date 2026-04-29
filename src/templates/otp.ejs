@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: -apple-system, system-ui, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+    .container { max-width: 500px; margin: 40px auto; padding: 20px; border: 1px solid #eee; border-radius: 12px; }
+    .header { text-align: center; margin-bottom: 30px; }
+    .content { text-align: center; background-color: #f8f9fa; padding: 40px 20px; border-radius: 10px; }
+    .otp-code { font-size: 40px; font-weight: 800; letter-spacing: 8px; color: #0070f3; margin: 25px 0; }
+    .footer { font-size: 12px; color: #999; text-align: center; margin-top: 30px; }
+    .expiry { font-weight: bold; color: #d93025; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 style="margin:0; font-size: 24px;">Your App Name</h1>
+    </div>
+    <div class="content">
+      <h2 style="margin-top:0;">Hi <%= name %>,</h2>
+      <p>Verify your account by entering the code below:</p>
+      
+      <div class="otp-code"><%= otp %></div>
+      
+      <p>This code will expire in <span class="expiry">10 minutes</span>.</p>
+      <p style="font-size: 13px; color: #666;">If you didn't request this, please ignore this email.</p>
+    </div>
+    <div class="footer">
+      &copy; 2026 Your App Name. Sent with ❤️ from Vercel.
+    </div>
+  </div>
+</body>
+</html>

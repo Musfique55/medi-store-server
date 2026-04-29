@@ -1,6 +1,9 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./prisma";
+import { bearer, emailOTP } from "better-auth/plugins";
+import { envVars } from "../config/env";
+import { sendEmail } from "../config/sendEmail";
 
 
 
@@ -9,9 +12,15 @@ export const auth = betterAuth({
     database: prismaAdapter(prisma, {
         provider: "postgresql", // or "mysql", "postgresql", ...etc
     }),
-    trustedOrigins : [process.env.APP_URL as string],
+    trustedOrigins : [envVars.APP_URL as string],
     emailAndPassword : {
         enabled : true,
+        requireEmailVerification : true
+    },
+    emailVerification : {
+        sendOnSignIn : true,
+        sendOnSignUp : true,
+        autoSignInAfterVerification : true,
     },
     user : {
         additionalFields : {
@@ -28,6 +37,64 @@ export const auth = betterAuth({
                 type : "string",
                 defaultValue : "unban"
             }
+        }
+    },
+    plugins : [bearer(),emailOTP({
+        overrideDefaultEmailVerification : true,
+        async sendVerificationOTP({email,otp,type}) {
+            if(type === "email-verification"){
+                const user = await prisma.user.findUnique({
+                    where : {
+                        email,
+                        emailVerified : false
+                    }
+                });
+
+                if(user){
+                    await sendEmail({
+                        to : user.email,
+                        subject : "Email Verification",
+                        templateName : "otp",
+                        templateData : {
+                            name : user.name,
+                            otp
+                        }
+                    })
+                }
+            }
+        },
+        expiresIn : 60 * 10,
+        otpLength : 4
+    })],
+    session : {
+        expiresIn : 60 * 60 * 24 * 7,
+        updateAge : 60 * 60 * 24,
+        cookieCache : {
+            enabled : true,
+            maxAge : 24 * 60 * 60
+        }
+    },
+    advanced : {
+        useSecureCookies : true,
+        cookies : {
+            state : {
+                attributes : {
+                    maxAge : 7 * 24 * 60 * 60 * 1000,
+                    path : "/",
+                    sameSite : "none",
+                    secure : true,
+                    httpOnly : true
+                }
+            },
+            session_token : {
+                attributes : {
+                    maxAge : 7 * 24 * 60 * 60 * 1000,
+                    path : "/",
+                    sameSite : "none",
+                    secure : true,
+                    httpOnly : true
+                }
+            },
         }
     }
 });
