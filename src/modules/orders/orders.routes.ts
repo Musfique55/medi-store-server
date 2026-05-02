@@ -16,4 +16,4 @@ routes.post("/",auth(roles.CUSTOMER),orderController.newOrder);
 
 
 
-export const customerOrderRoutes = routes;
+export const orderRoutes = routes;

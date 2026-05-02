@@ -11,6 +11,8 @@ interface envVars {
     EMAIL_SENDER_SMTP_HOST: string;
     EMAIL_SENDER_SMTP_PORT: string;
   };
+  ADMIN_EMAIL : string;
+  ADMIN_PASS : string;
 }
 
 const loadEnvs = () => {
@@ -25,6 +27,8 @@ const loadEnvs = () => {
     "EMAIL_SENDER_SMTP_PASSWORD",
     "EMAIL_SENDER_SMTP_HOST",
     "EMAIL_SENDER_SMTP_PORT",
+    "ADMIN_EMAIL",
+    "ADMIN_PASS"
   ];
 
   envs.forEach((env) => {
@@ -45,7 +49,9 @@ const loadEnvs = () => {
         EMAIL_SENDER_SMTP_PASSWORD: process.env.EMAIL_SENDER_SMTP_PASSWORD as string,
         EMAIL_SENDER_SMTP_HOST: process.env.EMAIL_SENDER_SMTP_HOST as string,
         EMAIL_SENDER_SMTP_PORT: process.env.EMAIL_SENDER_SMTP_PORT as string,
-    }
+    },
+    ADMIN_EMAIL : process.env.ADMIN_EMAIL as string,
+    ADMIN_PASS : process.env.ADMIN_PASS as string
   }
 };
 

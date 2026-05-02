@@ -8,7 +8,9 @@
     "dev": "npx tsx watch src/server.ts",
     "seed:admin": "npx tsx src/scripts/index.ts",
     "build": "prisma generate && prisma migrate deploy && tsup src/server.ts --format esm --platform node --target node20 --outDir dist",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "migrate": "prisma migrate dev",
+    "generate": "prisma generate"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +27,7 @@
     "express": "^5.2.1",
     "http-status": "^2.1.0",
     "jsonwebtoken": "^9.0.3",
+    "nanoid": "^5.1.11",
     "nodemailer": "^8.0.7",
     "pg": "^8.18.0",
     "tsup": "^8.5.1"

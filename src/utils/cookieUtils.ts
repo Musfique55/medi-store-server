@@ -1,13 +1,36 @@
 import { Request, Response } from "express"
 
 const getCookie = (req : Request,key : string) => {
-    return req.cookies[key];
+    const parsedValue = req.cookies?.[key];
+    if (parsedValue) {
+        return parsedValue;
+    }
+
+    const rawCookie = req.headers?.cookie;
+    if (!rawCookie) {
+        return undefined;
+    }
+
+    const cookies = rawCookie.split(";").map((cookie) => cookie.trim());
+    const values = cookies
+        .map((cookie) => {
+            const [cookieKey, ...cookieVal] = cookie.split("=");
+            if (cookieKey === key) {
+                return decodeURIComponent(cookieVal.join("="));
+            }
+            return undefined;
+        })
+        .filter((value): value is string => typeof value === "string");
+
+    return values.length ? values[values.length - 1] : undefined;
 }
 
+const isSecureCookie = process.env.NODE_ENV === "production";
+
 const setCookie = (res : Response,key : string,value : string,{maxAge} : {maxAge : number}) => {
-    res.cookie(key,value,{
-        sameSite : 'none',
-        secure : true,
+    res.cookie(key,value,{ 
+        sameSite : isSecureCookie ? 'none' : 'lax',
+        secure : isSecureCookie,
         httpOnly : true,
         maxAge,
         path : '/'
@@ -16,8 +39,8 @@ const setCookie = (res : Response,key : string,value : string,{maxAge} : {maxAge
 
 const clearCookie = (res : Response,key : string) => {
     res.clearCookie(key,{
-        sameSite : 'none',
-        secure : true,
+        sameSite : isSecureCookie ? 'none' : 'lax',
+        secure : isSecureCookie,
         httpOnly : true,
         path : '/'
     })

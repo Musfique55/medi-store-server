@@ -132,6 +132,31 @@ model Manufacturer {
   @@index([id,name])
 }
 
+model Cart {
+  id String @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  expiresAt DateTime
+  items CartItems[]
+
+  @@map("cart")
+  @@index([id])
+}
+
+model CartItems {
+  id String @id @default(uuid())
+  cartId String
+  cart Cart @relation(fields: [cartId],references: [id])
+  quantity Int @default(1)
+  price Float
+  productId String
+  name String
+  image String? 
+
+  @@map("cart_items")
+  @@index([id])
+}
+
 model Order {
   id String @id @default(uuid())
   order_number String @unique
@@ -155,8 +180,6 @@ model Order {
   @@map("order")
   @@index([customer_id])
 }
-
-
 
 model OrderItems {
   id String @id @default(uuid())

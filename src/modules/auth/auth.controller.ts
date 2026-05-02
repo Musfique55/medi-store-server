@@ -1,21 +1,19 @@
-import { Request, RequestHandler, Response } from "express";
-import { auth } from "../../lib/auth";
+import { Request, Response } from "express";
 import { authServices } from "./auth.services";
 import { catchAsync } from "../../helper/catchAsync";
 import { sendResponse } from "../../helper/sendResponse";
 import { cookieUtils } from "../../utils/cookieUtils";
 
-const getLoggedInUser: RequestHandler = async (req, res) => {
-  try {
-    const session = await auth.api.getSession({ headers: req.headers as any });
-    const user = await authServices.getLoggedInUser(session?.user.id!);
-    res.status(200).json({
-      message: "user fetched successfully",
-      success: true,
-      data: user,
-    });
-  } catch (error) {}
-};
+const getLoggedInUser = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.user!;
+  const user = await authServices.getLoggedInUser(id!);
+  sendResponse(res, {
+    message: "user fetched successfully",
+    success: true,
+    data: user,
+    statusCode: 200,
+  });
+});
 
 const register = catchAsync(async (req: Request, res: Response) => {
   const { name, email, password } = req.body;
@@ -83,11 +81,17 @@ const logout = catchAsync(async (req: Request, res: Response) => {
 });
 
 const newRefreshToken = catchAsync(async (req: Request, res: Response) => {
-  const  refreshToken = req.cookies.refreshToken;
+  const refreshToken = req.cookies.refreshToken;
   const sessionToken = req.cookies["better-auth.session_token"];
   const result = await authServices.newRefreshToken(refreshToken, sessionToken);
   cookieUtils.setCookie(res, "accessToken", result.accessToken, {
     maxAge: 60 * 15 * 1000,
+  });
+  cookieUtils.setCookie(res, "refreshToken", result.refreshToken, {
+    maxAge: 60 * 60 * 24 * 7 * 1000,
+  });
+  cookieUtils.setCookie(res, "better-auth.session_token", result.token, {
+    maxAge: 60 * 60 * 24 * 7 * 1000,
   });
   sendResponse(res, {
     message: "new refresh token generated successfully",
@@ -103,5 +107,5 @@ export const authController = {
   register,
   logout,
   verifyEmailOtp,
-  newRefreshToken
+  newRefreshToken,
 };

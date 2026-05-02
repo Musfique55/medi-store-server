@@ -1,0 +1,769 @@
+{
+  "info": {
+    "name": "Medical Ecommerce API",
+    "description": "API collection for Medical Ecommerce Backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Verify Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/verify-email",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "verify-email"]
+            }
+          }
+        },
+        {
+          "name": "Get Logged In User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "accessToken={{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/refresh-token",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "refresh-token"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Medicines",
+      "item": [
+        {
+          "name": "Get All Medicines",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/medicines?category=medicine-category&minPrice=10&maxPrice=100&manufacturer=manufacturer-name",
+              "host": ["{{base_url}}"],
+              "path": ["medicines"],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "medicine-category"
+                },
+                {
+                  "key": "minPrice",
+                  "value": "10"
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "100"
+                },
+                {
+                  "key": "manufacturer",
+                  "value": "manufacturer-name"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Medicine by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/medicines/:id",
+              "host": ["{{base_url}}"],
+              "path": ["medicines", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "medicine-id"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Seller Medicines",
+      "item": [
+        {
+          "name": "Create Medicine",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "accessToken={{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"seller_id\": \"seller-id\",\n  \"category_id\": \"category-id\",\n  \"manufacturer_id\": \"manufacturer-id\",\n  \"name\": \"Medicine Name\",\n  \"description\": \"Medicine description\",\n  \"retails_price\": 50.00,\n  \"purchase_price\": 30.00,\n  \"discount_type\": \"PERCENTAGE\",\n  \"discount_value\": 10,\n  \"stock\": 100,\n  \"image_url\": [\"image1.jpg\", \"image2.jpg\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/seller/medicines",
+              "host": ["{{base_url}}"],
+              "path": ["seller", "medicines"]
+            }
+          }
+        },
+        {
+          "name": "Update Medicine Stock",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "accessToken={{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stock\": 150\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/seller/medicines/:id/stock",
+              "host": ["{{base_url}}"],
+              "path": ["seller", "medicines", ":id", "stock"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "medicine-id"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Medicine",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "accessToken={{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Medicine Name\",\n  \"description\": \"Updated description\",\n  \"retails_price\": 60.00,\n  \"purchase_price\": 35.00,\n  \"discount_type\": \"FIXED\",\n  \"discount_value\": 5,\n  \"stock\": 120,\n  \"image_url\": [\"new-image.jpg\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/seller/medicines/:id",
+              "host": ["{{base_url}}"],
+              "path": ["seller", "medicines", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "medicine-id"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Medicine",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "accessToken={{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/seller/medicines/:id",
+              "host": ["{{base_url}}"],
+              "path": ["seller", "medicines", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "medicine-id"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/categories",
+              "host": ["{{base_url}}"],
+              "path": ["categories"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Categories",
+      "item": [
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "accessToken={{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"author_id\": \"admin-id\",\n  \"category_name\": \"New Category\",\n  \"description\": \"Category description\",\n  \"icon_url\": \"icon.jpg\",\n  \"slug\": \"new-category\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/categories",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "categories"]
+            }
+          }
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "accessToken={{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category_name\": \"Updated Category\",\n  \"description\": \"Updated description\",\n  \"icon_url\": \"new-icon.jpg\",\n  \"slug\": \"updated-category\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/categories/update/:id",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "categories", "update", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "category-id"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "accessToken={{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/categories/delete/:id",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "categories", "delete", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "category-id"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Manufacturers",
+      "item": [
+        {
+          "name": "Get All Manufacturers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/manufacturer",
+              "host": ["{{base_url}}"],
+              "path": ["manufacturer"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Manufacturers",
+      "item": [
+        {
+          "name": "Create Manufacturer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "accessToken={{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Manufacturer\",\n  \"description\": \"Manufacturer description\",\n  \"logo_url\": \"logo.jpg\",\n  \"country\": \"USA\",\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/manufacturer",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "manufacturer"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Get User Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "accessToken={{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders",
+              "host": ["{{base_url}}"],
+              "path": ["orders"]
+            }
+          }
+        },
+        {
+          "name": "Get Delivered Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "accessToken={{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders/delivered",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "delivered"]
+            }
+          }
+        },
+        {
+          "name": "Get Orders by Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "accessToken={{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders/status/:status",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "status", ":status"],
+              "variable": [
+                {
+                  "key": "status",
+                  "value": "PENDING"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Order Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "accessToken={{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders/:id",
+              "host": ["{{base_url}}"],
+              "path": ["orders", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "order-id"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "accessToken={{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_id\": \"customer-id\",\n  \"subtotal\": 100.00,\n  \"total_amount\": 100.00,\n  \"discount_amount\": 0.00,\n  \"order_status\": \"PENDING\",\n  \"payment_status\": \"PENDING\",\n  \"delivery_method\": \"COD\",\n  \"shipping_address\": {\n    \"street\": \"123 Main St\",\n    \"city\": \"Anytown\",\n    \"state\": \"CA\",\n    \"zip\": \"12345\"\n  },\n  \"order_items\": [\n    {\n      \"product_id\": \"medicine-id\",\n      \"quantity\": 2,\n      \"unit_price\": 50.00\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders",
+              "host": ["{{base_url}}"],
+              "path": ["orders"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Seller Orders",
+      "item": [
+        {
+          "name": "Update Order Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "accessToken={{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_status\": \"SHIPPED\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/seller/orders/:id",
+              "host": ["{{base_url}}"],
+              "path": ["seller", "orders", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "order-id"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Seller Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "accessToken={{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/seller/orders",
+              "host": ["{{base_url}}"],
+              "path": ["seller", "orders"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Orders",
+      "item": [
+        {
+          "name": "Get All Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "accessToken={{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/orders",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "orders"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Create Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "accessToken={{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"author_id\": \"user-id\",\n  \"product_id\": \"medicine-id\",\n  \"order_id\": \"order-id\",\n  \"description\": \"Great product!\",\n  \"rating\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reviews",
+              "host": ["{{base_url}}"],
+              "path": ["reviews"]
+            }
+          }
+        },
+        {
+          "name": "Delete Review",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "accessToken={{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reviews/:id",
+              "host": ["{{base_url}}"],
+              "path": ["reviews", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "review-id"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "Get Cart",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/cart",
+              "host": ["{{base_url}}"],
+              "path": ["cart"]
+            }
+          }
+        },
+        {
+          "name": "Create Cart",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"productId\": \"medicine-id\",\n      \"quantity\": 2,\n      \"price\": 50.00,\n      \"name\": \"Medicine Name\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cart",
+              "host": ["{{base_url}}"],
+              "path": ["cart"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Users",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "accessToken={{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users"]
+            }
+          }
+        },
+        {
+          "name": "Update User Status",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "accessToken={{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"user-id\",\n  \"status\": \"ban\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/users/update-status",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users", "update-status"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

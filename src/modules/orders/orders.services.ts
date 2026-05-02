@@ -1,23 +1,34 @@
-
-import { DeliveryMethods, OrderStatus, Prisma } from "../../generated/prisma/client";
+import {
+  DeliveryMethods,
+  OrderStatus,
+  Prisma,
+} from "../../generated/prisma/client";
 import { prisma } from "../../lib/prisma";
 import { CreateOrderInput } from "../../types/order";
+import { nanoid } from "nanoid";
 
 const newOrder = async (data: CreateOrderInput) => {
+  const id = nanoid(10);
+
+  const generateOrderNumber = `order-${id}`;
+  const subtotal = data.order_items.reduce(
+    (sum, item) =>
+      sum.add(new Prisma.Decimal(item.unit_price)).mul(item.quantity),
+    new Prisma.Decimal(0),
+  );
+
+  console.log(subtotal);
   try {
-   const date = new Date().toISOString().replace(/[-:.TZ]/g,"");
 
-   const generateOrderNumber = `order-${date}`;
-
-    const ordered = await prisma.$transaction(async (tx) => {
-      const ordered_items = await tx.order.create({
+    return await prisma.$transaction(async (tx) => {
+      const order = await tx.order.create({
         data: {
           customer_id: data.customer_id,
-          order_number : generateOrderNumber,
-          subtotal : new Prisma.Decimal(data.total_amount),
+          order_number: generateOrderNumber,
+          subtotal: subtotal,
           total_amount: new Prisma.Decimal(data.total_amount),
           shipping_address: data.shipping_address,
-          delivery_method:  DeliveryMethods.COD,
+          delivery_method: DeliveryMethods.COD,
           order_items: {
             create: data.order_items.map((item) => ({
               product_id: item.product_id,
@@ -32,32 +43,32 @@ const newOrder = async (data: CreateOrderInput) => {
       });
 
       await Promise.all(
-        ordered_items.order_items.map((item) => {
-          const update = tx.medicine.update({
-            where: {
-              id: item.product_id,
-              stock: {
-                gte: item.quantity,
+        data.order_items.map((item) => {
+          try {
+            return tx.medicine.update({
+              where: {
+                id: item.product_id,
+                stock: {
+                  gte: item.quantity,
+                },
+                retails_price: {
+                  equals: item.unit_price,
+                },
               },
-              retails_price: {
-                equals: item.unit_price,
+              data: {
+                stock: {
+                  decrement: item.quantity,
+                },
               },
-            },
-            data: {
-              stock: {
-                decrement: item.quantity,
-              },
-            },
-          });
-          if (!update) throw new Error(`FAILED_PRODUCT_${item.product_id}`);
+            });
+          } catch (error) {
+            throw new Error(`FAILED_PRODUCT_${item.product_id}`);
+          }
         }),
       );
 
-      return ordered_items;
+      return order;
     });
-    console.log(ordered);
-
-    return ordered;
   } catch (error: any) {
     throw error;
   }
@@ -79,9 +90,9 @@ const getAllOrders = async () => {
 
     const formattedStructure = data.map((item) => ({
       ...item,
-      order_items : item.order_items.map(o => o.product)
-    }))
-    
+      order_items: item.order_items.map((o) => o.product),
+    }));
+
     return formattedStructure;
   } catch (error) {
     throw error;
@@ -176,12 +187,12 @@ const getUserOrders = async (user_id: string) => {
         customer_id: true,
       },
     });
-    
+
     const formattedStructure = data.map((item) => ({
       ...item,
-      order_items : item.order_items.map(o => o.product)
-    }))
-    
+      order_items: item.order_items.map((o) => o.product),
+    }));
+
     return formattedStructure;
   } catch (error) {
     console.log(error);
@@ -194,7 +205,7 @@ const getDeliveredOrders = async (user_id: string) => {
     const data = await prisma.order.findMany({
       where: {
         customer_id: user_id,
-        order_status : "DELIVERED"
+        order_status: "DELIVERED",
       },
       include: {
         order_items: {
@@ -212,12 +223,12 @@ const getDeliveredOrders = async (user_id: string) => {
         customer_id: true,
       },
     });
-    
+
     const formattedStructure = data.map((item) => ({
       ...item,
-      order_items : item.order_items.map(o => o.product)
-    }))
-    
+      order_items: item.order_items.map((o) => o.product),
+    }));
+
     return formattedStructure;
   } catch (error) {
     console.log(error);
@@ -225,12 +236,12 @@ const getDeliveredOrders = async (user_id: string) => {
   }
 };
 
-const getOrdersByStatus = async (user_id: string,status : OrderStatus) => {
+const getOrdersByStatus = async (user_id: string, status: OrderStatus) => {
   try {
     const data = await prisma.order.findMany({
       where: {
         customer_id: user_id,
-        order_status : status
+        order_status: status,
       },
       include: {
         order_items: {
@@ -248,20 +259,18 @@ const getOrdersByStatus = async (user_id: string,status : OrderStatus) => {
         customer_id: true,
       },
     });
-    
+
     const formattedStructure = data.map((item) => ({
       ...item,
-      order_items : item.order_items.map(o => o.product)
-    }))
-    
+      order_items: item.order_items.map((o) => o.product),
+    }));
+
     return formattedStructure;
   } catch (error) {
     console.log(error);
     throw error;
   }
 };
-
-
 
 const getOrderDetails = async (order_id: string) => {
   try {
@@ -307,5 +316,5 @@ export const orderServices = {
   getOrderDetails,
   getAllOrders,
   getOrdersByStatus,
-  getDeliveredOrders
+  getDeliveredOrders,
 };

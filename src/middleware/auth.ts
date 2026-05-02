@@ -21,15 +21,20 @@ declare global {
 export const auth = (...roles: roles[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const isRefreshTokenRoute =
+        req.path === "/refresh-token" ||
+        req.originalUrl.endsWith("/refresh-token");
+
       const currentSessionToken =
         req.cookies["better-auth.session_token"] ||
         req.cookies["_Secure-better-auth.session_token"];
 
+
       if (!currentSessionToken) {
-        throw new AppError("unauthorized", 401);
+        throw new AppError("Unauthorized", 401);
       }
 
-      const session = await prisma.session.findUniqueOrThrow({
+      const session = await prisma.session.findUnique({
         where: {
           token: currentSessionToken,
         },
@@ -38,21 +43,28 @@ export const auth = (...roles: roles[]) => {
         },
       });
 
-      if (session && session.user) {
+      if (!session || !session.user) {
+        throw new AppError("invalid session token", 401);
+      }
+
+
+      if (session && session?.user) {
         if (roles.length > 0 && !roles.includes(session.user.role as roles)) {
           throw new AppError("Forbidden : Insufficient permissions", 403);
         }
       }
 
-      const accessToken = cookieUtils.getCookie(req, "accessToken");
-      if (!accessToken && req.url !== "/refresh-token") {
+      const accessToken = cookieUtils.getCookie(req,"accessToken");
+      if (!accessToken && !isRefreshTokenRoute) {
         throw new AppError("unauthorized", 401);
       }
 
-      const verifiedToken = jwtUtils.verifyToken(accessToken);
+      if (accessToken) {
+        const verifiedToken = jwtUtils.verifyToken(accessToken);
 
-      if(!verifiedToken && req.url !== "/refresh-token"){
-        throw new AppError("unauthorized", 401);
+        if (!verifiedToken.success && !isRefreshTokenRoute) {
+          throw new AppError("unauthorized", 401);
+        }
       }
 
       req.user = {
