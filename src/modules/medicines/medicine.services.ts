@@ -1,12 +1,18 @@
 import { Medicine } from "../../generated/prisma/client";
 import { MedicineWhereInput } from "../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
+import { generateUniqueSlug } from "../../utils/generateUniqueSlug";
 
 const createMedicine = async (data: Medicine) => {
+  const { name } = data;
+  const uniqueSlug = generateUniqueSlug(name);
   try {
     const medicine = await prisma.$transaction(async (tx) => {
       const medicineData = await tx.medicine.create({
-        data,
+        data: {
+          ...data,
+          slug: uniqueSlug,
+        },
       });
       await tx.category.update({
         where: {
@@ -78,7 +84,6 @@ const getMedicines = async (
     }
 
     if (manufacturer) {
-
       filters.push({
         manufacturer: {
           name: {
@@ -137,11 +142,11 @@ const updateStocks = async (id: string, { stock }: { stock: number }) => {
   }
 };
 
-const getMedicine = async (medicine_id: string) => {
+const getMedicine = async (slug: string) => {
   try {
     const medicine = await prisma.medicine.findUnique({
       where: {
-        id: medicine_id,
+        slug,
       },
       include: {
         manufacturer: true,

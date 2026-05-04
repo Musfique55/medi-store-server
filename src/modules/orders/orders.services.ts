@@ -1,34 +1,25 @@
 import {
   DeliveryMethods,
   OrderStatus,
+  PaymentStatus,
   Prisma,
 } from "../../generated/prisma/client";
 import { prisma } from "../../lib/prisma";
 import { CreateOrderInput } from "../../types/order";
-import { nanoid } from "nanoid";
 
-const newOrder = async (data: CreateOrderInput) => {
-  const id = nanoid(10);
-
-  const generateOrderNumber = `order-${id}`;
-  const subtotal = data.order_items.reduce(
-    (sum, item) =>
-      sum.add(new Prisma.Decimal(item.unit_price)).mul(item.quantity),
-    new Prisma.Decimal(0),
-  );
-
-  console.log(subtotal);
+const newOrder = async (data: CreateOrderInput, cart_id: string) => {
   try {
-
+    console.log(cart_id);
     return await prisma.$transaction(async (tx) => {
       const order = await tx.order.create({
         data: {
           customer_id: data.customer_id,
-          order_number: generateOrderNumber,
-          subtotal: subtotal,
-          total_amount: new Prisma.Decimal(data.total_amount),
+          order_number: data.order_number,
+          subtotal: data.subtotal,
+          total_amount: data.total_amount,
           shipping_address: data.shipping_address,
-          delivery_method: DeliveryMethods.COD,
+          payment_status: data.payment_status as PaymentStatus,
+          delivery_method: data.delivery_method as DeliveryMethods,
           order_items: {
             create: data.order_items.map((item) => ({
               product_id: item.product_id,
@@ -51,9 +42,6 @@ const newOrder = async (data: CreateOrderInput) => {
                 stock: {
                   gte: item.quantity,
                 },
-                retails_price: {
-                  equals: item.unit_price,
-                },
               },
               data: {
                 stock: {
@@ -66,6 +54,13 @@ const newOrder = async (data: CreateOrderInput) => {
           }
         }),
       );
+
+      // delete the cart items
+      await tx.cart.delete({
+        where: {
+          id: cart_id,
+        },
+      });
 
       return order;
     });
@@ -272,11 +267,12 @@ const getOrdersByStatus = async (user_id: string, status: OrderStatus) => {
   }
 };
 
-const getOrderDetails = async (order_id: string) => {
+const getOrderDetails = async (order_id: string, user_id: string) => {
   try {
-    const orderDetails = await prisma.order.findUnique({
+    const orderDetails = await prisma.order.findFirst({
       where: {
         id: order_id,
+        customer_id: user_id,
       },
       include: {
         order_items: {

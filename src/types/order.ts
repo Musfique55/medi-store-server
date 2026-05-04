@@ -1,6 +1,10 @@
-import { Prisma } from "../generated/prisma/client";
+import {
+  DeliveryMethods,
+  PaymentStatus,
+  Prisma,
+} from "../generated/prisma/client";
 
-type OrderItemInput = {
+export type OrderItemInput = {
   product_id: string;
   quantity: number;
   unit_price: number | Prisma.Decimal;
@@ -8,8 +12,11 @@ type OrderItemInput = {
 
 export type CreateOrderInput = {
   customer_id: string;
+  order_number: string;
   shipping_address: string;
-  delivery_method?: string;
+  delivery_method: DeliveryMethods;
+  payment_status: PaymentStatus;
   total_amount: number | Prisma.Decimal;
+  subtotal: number | Prisma.Decimal;
   order_items: OrderItemInput[];
 };

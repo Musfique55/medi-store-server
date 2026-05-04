@@ -95,7 +95,8 @@ model Medicine{
   category Category @relation(fields: [category_id],references: [id])
   manufacturer_id String
   manufacturer Manufacturer @relation(fields: [manufacturer_id],references: [id]) 
-  name String @unique
+  name String 
+  slug String @unique
   description String
   retails_price Decimal @db.Decimal(10,2)
   purchase_price Decimal @db.Decimal(10,2)
@@ -112,6 +113,7 @@ model Medicine{
 
   @@map("medicine")
   @@index([id,category_id,seller_id])
+  @@unique([name,seller_id])
 }
 
 model Manufacturer {
@@ -146,7 +148,7 @@ model Cart {
 model CartItems {
   id String @id @default(uuid())
   cartId String
-  cart Cart @relation(fields: [cartId],references: [id])
+  cart Cart @relation(fields: [cartId],references: [id],onDelete: Cascade)
   quantity Int @default(1)
   price Float
   productId String
@@ -154,7 +156,8 @@ model CartItems {
   image String? 
 
   @@map("cart_items")
-  @@index([id])
+  @@index([id,cartId])
+  @@unique([productId,cartId])
 }
 
 model Order {

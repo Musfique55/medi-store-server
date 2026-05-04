@@ -1,26 +1,19 @@
 import { RequestHandler } from "express";
 import { orderServices } from "./orders.services";
 import { auth } from "../../lib/auth";
-import { validateCart } from "../../lib/validateCart";
 import { OrderStatus } from "../../generated/prisma/enums";
 
 const newOrder: RequestHandler = async (req, res) => {
   try {
-    const validateErrors = await validateCart(req.body);
-
-    if (validateErrors.length > 0) {
-      return res.status(400).json({
-        errors : validateErrors,
-        success : false
-      });
-    }
-    const result = await orderServices.newOrder(req.body);
+    const cartId = req.cookies.cart_id;
+    const result = await orderServices.newOrder(req.body, cartId);
     res.status(201).json({
       message: "Order placed Successfully",
       success: true,
       data: result,
     });
   } catch (error: any) {
+    console.log(error);
     if (error.code === "P2025") {
       return res.status(400).json({
         message:
@@ -67,7 +60,7 @@ const getSellersOrder: RequestHandler = async (req, res) => {
       data: result,
     });
   } catch (error: any) {
-    res.json(error.status || 500).json({
+    res.status(error.status || 500).json({
       message: error.message || "Server internal error",
       success: false,
     });
@@ -85,7 +78,7 @@ const getUserOrders: RequestHandler = async (req, res) => {
       data: result,
     });
   } catch (error: any) {
-    res.json(error.status || 500).json({
+    res.status(error.status || 500).json({
       message: error.message || "Server internal error",
       success: false,
     });
@@ -103,7 +96,7 @@ const getDeliveredOrders: RequestHandler = async (req, res) => {
       data: result,
     });
   } catch (error: any) {
-    res.json(error.status || 500).json({
+    res.status(error.status || 500).json({
       message: error.message || "Server internal error",
       success: false,
     });
@@ -112,10 +105,10 @@ const getDeliveredOrders: RequestHandler = async (req, res) => {
 const getOrdersByStatus: RequestHandler = async (req, res) => {
   try {
     const status = req.params.status;
-    const session = await auth.api.getSession({ headers: req.headers as any });
+    const userId = req.user?.id;
     const result = await orderServices.getOrdersByStatus(
-      session?.user.id as string,
-      status as OrderStatus
+      userId as string,
+      status as OrderStatus,
     );
 
     res.status(200).json({
@@ -124,7 +117,7 @@ const getOrdersByStatus: RequestHandler = async (req, res) => {
       data: result,
     });
   } catch (error: any) {
-    res.json(error.status || 500).json({
+    res.status(error.status || 500).json({
       message: error.message || "Server internal error",
       success: false,
     });
@@ -134,14 +127,25 @@ const getOrdersByStatus: RequestHandler = async (req, res) => {
 const getOrderDetails: RequestHandler = async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await orderServices.getOrderDetails(id as string);
+    const userId = req.user?.id;
+    const result = await orderServices.getOrderDetails(
+      id as string,
+      userId as string,
+    );
+
+    if (!result) {
+      return res.status(404).json({
+        message: "Order not found",
+        success: false,
+      });
+    }
     res.status(200).json({
       message: "Order details fetched successfully",
       success: true,
       data: result,
     });
   } catch (error: any) {
-    res.json(error.status || 500).json({
+    res.status(error.status || 500).json({
       message: error.message || "Server internal error",
       success: false,
     });
@@ -156,7 +160,7 @@ const getAllOrders: RequestHandler = async (req, res) => {
       data: result,
     });
   } catch (error: any) {
-    res.json(error.status || 500).json({
+    res.status(error.status || 500).json({
       message: error.message || "Server internal error",
       success: false,
     });
@@ -171,5 +175,5 @@ export const orderController = {
   getOrderDetails,
   getAllOrders,
   getOrdersByStatus,
-  getDeliveredOrders
+  getDeliveredOrders,
 };

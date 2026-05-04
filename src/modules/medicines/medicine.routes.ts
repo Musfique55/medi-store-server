@@ -6,9 +6,7 @@ import { medicineController } from "./medicine.controller";
 const routes = Router();
 
 // public routes
-routes.get("/",medicineController.getMedicines);
-routes.get("/:id",medicineController.getMedicine);
-
-
+routes.get("/", medicineController.getMedicines);
+routes.get("/:slug", medicineController.getMedicine);
 
 export const medicineRoutes = routes;
