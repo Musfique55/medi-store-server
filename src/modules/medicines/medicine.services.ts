@@ -1,7 +1,12 @@
 import { Medicine } from "../../generated/prisma/client";
-import { MedicineWhereInput } from "../../generated/prisma/models";
+import {
+  MedicineInclude,
+  MedicineWhereInput,
+} from "../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
+import { IQueryParams } from "../../types/queryBuilder";
 import { generateUniqueSlug } from "../../utils/generateUniqueSlug";
+import { QueryBuilder } from "../../utils/queryBuilder";
 
 const createMedicine = async (data: Medicine) => {
   const { name } = data;
@@ -46,58 +51,28 @@ const createMedicine = async (data: Medicine) => {
 
 const getMedicines = async (
   isSellerView: boolean,
-  category_slug?: string,
-  minPrice: number = 0,
-  maxPrice?: number,
-  manufacturer?: string,
+  queryParams: IQueryParams,
 ) => {
   try {
-    const filters: MedicineWhereInput[] = [];
     const baseOmits = {
       seller_id: true,
       category_id: true,
       manufacturer_id: true,
     };
 
-    if (category_slug) {
-      filters.push({
-        OR: [
-          {
-            category: {
-              slug: {
-                contains: category_slug,
-                mode: "insensitive",
-              },
-            },
-          },
-        ],
-      });
-    }
+    const queryBuilder = new QueryBuilder<
+      Medicine,
+      MedicineWhereInput,
+      MedicineInclude
+    >(prisma.medicine, queryParams, {
+      searchableFields: ["name", "description"],
+      filterableFields: ["stock", "is_featured"],
+    });
 
-    if (maxPrice) {
-      filters.push({
-        retails_price: {
-          gte: minPrice,
-          lte: maxPrice,
-        },
-      });
-    }
-
-    if (manufacturer) {
-      filters.push({
-        manufacturer: {
-          name: {
-            contains: manufacturer,
-          },
-        },
-      });
-    }
-
-    const result = await prisma.medicine.findMany({
-      where: {
-        AND: filters,
-      },
-      include: {
+    const result = await queryBuilder
+      .search()
+      .filter()
+      .include({
         category: {
           select: {
             category_name: true,
@@ -115,8 +90,15 @@ const getMedicines = async (
             rating: true,
           },
         },
+      })
+      .omit(isSellerView ? baseOmits : { ...baseOmits, purchase_price: true })
+      .paginate()
+      .execute();
+
+    await prisma.medicine.findMany({
+      select: {
+        category: {},
       },
-      omit: isSellerView ? baseOmits : { ...baseOmits, purchase_price: true },
     });
 
     return result;

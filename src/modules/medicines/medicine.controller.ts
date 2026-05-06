@@ -1,6 +1,8 @@
 import { RequestHandler } from "express";
 import { medicineServices } from "./medicine.services";
 import { getMaxPrice } from "../../lib/maxPrice";
+import { IQueryParams } from "../../types/queryBuilder";
+import { sendResponse } from "../../helper/sendResponse";
 
 const createMedicine: RequestHandler = async (req, res) => {
   try {
@@ -21,37 +23,21 @@ const createMedicine: RequestHandler = async (req, res) => {
 const getMedicines: RequestHandler = async (req, res) => {
   try {
     const isSellerView = req.originalUrl.includes("/seller");
-
-    const category =
-      req.query.category !== "undefined"
-        ? req.query.category?.toString()
-        : undefined;
-    const minPrice = req.query.minPrice
-      ? Number(req.query.minPrice)
-      : undefined;
-    const maxPrice = req.query.maxPrice
-      ? Number(req.query.maxPrice)
-      : undefined;
-    const manufacturer =
-      req.query.manufacturer !== "undefined"
-        ? req.query.manufacturer?.toString().split("-").join(" ")
-        : undefined;
+    const queryParams: IQueryParams = req.query;
 
     const result = await medicineServices.getMedicines(
       isSellerView,
-      category,
-      minPrice,
-      maxPrice,
-      manufacturer,
+      queryParams,
     );
 
     const mx = await getMaxPrice();
 
-    res.status(200).json({
-      message: "medicines fetched successfully",
+    sendResponse(res, {
+      data: result.data,
+      meta: result.meta,
       success: true,
-      data: result,
-      max_price: mx,
+      statusCode: 200,
+      message: "medicines fetched successfully",
     });
   } catch (error: any) {
     res.status(error.status || 500).json({

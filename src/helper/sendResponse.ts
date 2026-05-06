@@ -4,6 +4,7 @@ interface JsonBody {
   message: string;
   success: boolean;
   data?: any;
+  meta?: any;
   statusCode: number;
 }
 
@@ -12,5 +13,6 @@ export const sendResponse = (res: Response, result: JsonBody) => {
     message: result.message,
     success: result.success,
     data: result.data,
+    meta: result.meta,
   });
 };

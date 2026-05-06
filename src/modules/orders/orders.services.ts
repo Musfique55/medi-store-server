@@ -9,7 +9,6 @@ import { CreateOrderInput } from "../../types/order";
 
 const newOrder = async (data: CreateOrderInput, cart_id: string) => {
   try {
-    console.log(cart_id);
     return await prisma.$transaction(async (tx) => {
       const order = await tx.order.create({
         data: {

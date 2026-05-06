@@ -24,7 +24,6 @@ export const orderRequestValidator =
     try {
       const result = schema.safeParse(req.body);
 
-      console.log("validation result", result);
       if (!result.success) {
         return res.status(400).json({
           message: "Validation failed",
