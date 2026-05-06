@@ -66,7 +66,12 @@ const getMedicines = async (
       MedicineInclude
     >(prisma.medicine, queryParams, {
       searchableFields: ["name", "description"],
-      filterableFields: ["stock", "is_featured"],
+      filterableFields: [
+        "stock",
+        "is_featured",
+        "retails_price",
+        "manufacturer.name",
+      ],
     });
 
     const result = await queryBuilder
@@ -95,9 +100,34 @@ const getMedicines = async (
       .paginate()
       .execute();
 
-    await prisma.medicine.findMany({
-      select: {
-        category: {},
+    const d = await prisma.medicine.findMany({
+      where: {
+        AND: [
+          {
+            OR: [
+              {
+                name: {
+                  contains: "",
+                  mode: "insensitive",
+                },
+              },
+              {
+                description: {
+                  contains: "",
+                  mode: "insensitive",
+                },
+              },
+            ],
+          },
+          {
+            manufacturer: {
+              name: {
+                contains: "new",
+                mode: "insensitive",
+              },
+            },
+          },
+        ],
       },
     });
 

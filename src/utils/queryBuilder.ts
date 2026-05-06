@@ -75,11 +75,17 @@ export class QueryBuilder<T, TWhereInput, TInclude> {
         });
 
       const queryWhere = this.query.where as IWhereConditions;
-
-      queryWhere.OR = searchableCondition;
-
       const queryCountWhere = this.countQuery.where as IWhereConditions;
-      queryCountWhere.OR = searchableCondition;
+
+      if (!queryWhere.AND) {
+        queryWhere.AND = [];
+      }
+      queryWhere.AND.push({ OR: searchableCondition });
+
+      if (!queryCountWhere.AND) {
+        queryCountWhere.AND = [];
+      }
+      queryCountWhere.AND.push({ OR: searchableCondition });
     }
     return this;
   }
@@ -105,7 +111,7 @@ export class QueryBuilder<T, TWhereInput, TInclude> {
     const queryWhere = this.query.where as IWhereConditions;
     const queryCountWhere = this.countQuery.where as IWhereConditions;
 
-    for (const key of Object.keys(filterableFields)) {
+    for (const key of Object.keys(filterableConditions)) {
       const value = filterableConditions[key];
       if (value === undefined || value === "") continue;
 
@@ -116,8 +122,6 @@ export class QueryBuilder<T, TWhereInput, TInclude> {
 
       if (!isAllowedField) continue;
 
-      const parsedValue = this.parsedValue(value);
-
       if (key.includes(".")) {
         if (filterableFields && !filterableFields.includes(key)) {
           continue;
@@ -126,59 +130,36 @@ export class QueryBuilder<T, TWhereInput, TInclude> {
 
         if (parts.length === 2) {
           const [relation, nestedField] = parts;
-          if (!queryWhere[relation!]) {
-            queryWhere[relation!] = {};
-            queryCountWhere[relation!] = {};
-          }
-          const queryRelation = queryWhere[relation!] as IWhereConditions;
-          const queryCountRelation = queryCountWhere[
-            relation!
-          ] as IWhereConditions;
-          queryRelation[nestedField!] = parsedValue;
-          queryCountRelation[nestedField!] = parsedValue;
-        } else if (parts.length === 3) {
-          const [relation, nestedRelation, nestedField] = parts;
 
-          if (!queryWhere[relation!]) {
-            queryWhere[relation!] = {
-              some: {},
-            };
-            queryCountWhere[relation!] = {
-              some: {},
-            };
+          const searchTerm = {
+            [nestedField!]: {
+              contains: value,
+              mode: "insensitive",
+            },
+          };
+
+          const parsedValue = this.parsedValue(value);
+
+          if (!queryWhere.AND) {
+            queryWhere.AND = [];
+          }
+          if (!queryCountWhere.AND) {
+            queryCountWhere.AND = [];
           }
 
-          const queryRelation = queryWhere[relation!] as IWhereConditions;
-          const queryCountRelation = queryCountWhere[
-            relation!
-          ] as IWhereConditions;
-
-          if (!queryRelation.some) {
-            queryRelation.some = {};
-          }
-          if (!queryCountRelation.some) {
-            queryCountRelation.some = {};
-          }
-
-          const querySome = queryRelation.some as IWhereConditions;
-          const queryCountSome = queryCountRelation.some as IWhereConditions;
-
-          if (!querySome[nestedRelation!]) {
-            querySome[nestedRelation!] = {};
-          }
-          if (!queryCountSome[nestedRelation!]) {
-            queryCountSome[nestedRelation!] = {};
+          if (typeof parsedValue === "string") {
+            queryWhere.AND.push({
+              [relation!]: searchTerm,
+            });
+          } else if (typeof parsedValue === "boolean") {
+            queryWhere.AND.push({
+              [relation!]: {
+                [nestedField!]: parsedValue,
+              },
+            });
           }
 
-          const queryNestedRelation = querySome[
-            nestedRelation!
-          ] as IWhereConditions;
-          const queryCountNestedRelation = queryCountSome[
-            nestedRelation!
-          ] as IWhereConditions;
-
-          queryNestedRelation[nestedField!] = parsedValue;
-          queryCountNestedRelation[nestedField!] = parsedValue;
+          continue;
         }
       }
 
@@ -188,17 +169,32 @@ export class QueryBuilder<T, TWhereInput, TInclude> {
         value !== null &&
         !Array.isArray(value)
       ) {
-        queryWhere[key] = this.parseRangeFilter(
-          value as Record<string, unknown>,
-        );
-        queryCountWhere[key] = this.parseRangeFilter(
-          value as Record<string, unknown>,
-        );
+        if (!queryWhere.AND) {
+          queryWhere.AND = [];
+        }
+        if (!queryCountWhere.AND) {
+          queryCountWhere.AND = [];
+        }
+
+        queryWhere.AND.push({
+          [key]: this.parseRangeFilter(value as Record<string, unknown>),
+        });
+        queryCountWhere.AND.push({
+          [key]: this.parseRangeFilter(value as Record<string, unknown>),
+        });
+
         continue;
       }
 
-      queryWhere[key] = parsedValue;
-      queryCountWhere[key] = parsedValue;
+      if (!queryWhere.AND) {
+        queryWhere.AND = [];
+      }
+      if (!queryCountWhere.AND) {
+        queryCountWhere.AND = [];
+      }
+
+      queryWhere.AND.push({ [key]: this.parsedValue(value) });
+      queryCountWhere.AND.push({ [key]: this.parsedValue(value) });
     }
 
     return this;
