@@ -2,29 +2,24 @@ import { RequestHandler } from "express";
 import { orderServices } from "./orders.services";
 import { auth } from "../../lib/auth";
 import { OrderStatus } from "../../generated/prisma/enums";
+import { sendResponse } from "../../helper/sendResponse";
+import { AppError } from "../../helper/AppError";
 
 const newOrder: RequestHandler = async (req, res) => {
   try {
     const cartId = req.cookies.cart_id;
     const result = await orderServices.newOrder(req.body, cartId);
-    res.status(201).json({
+    sendResponse(res, {
       message: "Order placed Successfully",
       success: true,
+      statusCode: 201,
       data: result,
     });
   } catch (error: any) {
-    console.log(error);
-    if (error.code === "P2025") {
-      return res.status(400).json({
-        message:
-          "One or more items are out of stock or have insufficient quantity.",
-        success: false,
-      });
-    }
-    res.status(error.status || 500).json({
-      message: error.message || "Internal Server Error",
-      success: false,
-    });
+    throw new AppError(
+      error.message || "Internal Server Error",
+      error.statusCode || 500,
+    );
   }
 };
 
@@ -35,16 +30,17 @@ const updateOrderStatus: RequestHandler = async (req, res) => {
       id as string,
       req.body,
     );
-    res.status(201).json({
+    sendResponse(res, {
       message: "Order status updated Successfully",
       success: true,
+      statusCode: 201,
       data: result,
     });
   } catch (error: any) {
-    res.status(error.status || 500).json({
-      message: error.message || "Internal Server Error",
-      success: false,
-    });
+    throw new AppError(
+      error.message || "Internal Server Error",
+      error.statusCode || 500,
+    );
   }
 };
 
@@ -54,16 +50,17 @@ const getSellersOrder: RequestHandler = async (req, res) => {
     const result = await orderServices.getSellersOrder(
       session?.user.id as string,
     );
-    res.status(200).json({
+    sendResponse(res, {
       message: "Orders fetched successfully",
       success: true,
+      statusCode: 201,
       data: result,
     });
   } catch (error: any) {
-    res.status(error.status || 500).json({
-      message: error.message || "Server internal error",
-      success: false,
-    });
+    throw new AppError(
+      error.message || "Internal Server Error",
+      error.statusCode || 500,
+    );
   }
 };
 const getUserOrders: RequestHandler = async (req, res) => {
@@ -72,16 +69,17 @@ const getUserOrders: RequestHandler = async (req, res) => {
     const result = await orderServices.getUserOrders(
       session?.user.id as string,
     );
-    res.status(200).json({
+    sendResponse(res, {
       message: "Orders fetched successfully",
       success: true,
+      statusCode: 201,
       data: result,
     });
   } catch (error: any) {
-    res.status(error.status || 500).json({
-      message: error.message || "Server internal error",
-      success: false,
-    });
+    throw new AppError(
+      error.message || "Internal Server Error",
+      error.statusCode || 500,
+    );
   }
 };
 const getDeliveredOrders: RequestHandler = async (req, res) => {
@@ -90,16 +88,17 @@ const getDeliveredOrders: RequestHandler = async (req, res) => {
     const result = await orderServices.getDeliveredOrders(
       session?.user.id as string,
     );
-    res.status(200).json({
+    sendResponse(res, {
       message: "Orders fetched successfully",
       success: true,
+      statusCode: 201,
       data: result,
     });
   } catch (error: any) {
-    res.status(error.status || 500).json({
-      message: error.message || "Server internal error",
-      success: false,
-    });
+    throw new AppError(
+      error.message || "Internal Server Error",
+      error.statusCode || 500,
+    );
   }
 };
 const getOrdersByStatus: RequestHandler = async (req, res) => {
@@ -111,16 +110,17 @@ const getOrdersByStatus: RequestHandler = async (req, res) => {
       status as OrderStatus,
     );
 
-    res.status(200).json({
+    sendResponse(res, {
       message: "Orders fetched successfully",
       success: true,
+      statusCode: 201,
       data: result,
     });
   } catch (error: any) {
-    res.status(error.status || 500).json({
-      message: error.message || "Server internal error",
-      success: false,
-    });
+    throw new AppError(
+      error.message || "Internal Server Error",
+      error.statusCode || 500,
+    );
   }
 };
 
@@ -139,31 +139,33 @@ const getOrderDetails: RequestHandler = async (req, res) => {
         success: false,
       });
     }
-    res.status(200).json({
+    sendResponse(res, {
       message: "Order details fetched successfully",
       success: true,
+      statusCode: 201,
       data: result,
     });
   } catch (error: any) {
-    res.status(error.status || 500).json({
-      message: error.message || "Server internal error",
-      success: false,
-    });
+    throw new AppError(
+      error.message || "Internal Server Error",
+      error.statusCode || 500,
+    );
   }
 };
 const getAllOrders: RequestHandler = async (req, res) => {
   try {
     const result = await orderServices.getAllOrders();
-    res.status(200).json({
+    sendResponse(res, {
       message: "Order fetched successfully",
       success: true,
+      statusCode: 201,
       data: result,
     });
   } catch (error: any) {
-    res.status(error.status || 500).json({
-      message: error.message || "Server internal error",
-      success: false,
-    });
+    throw new AppError(
+      error.message || "Internal Server Error",
+      error.statusCode || 500,
+    );
   }
 };
 
