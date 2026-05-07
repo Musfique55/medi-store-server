@@ -11,7 +11,6 @@ const createCart = async (cartId: string, product: any, quantity: number) => {
       // Create cart if it doesn't exist
       cart = await prisma.cart.create({
         data: {
-          id: cartId,
           expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
         },
       });
@@ -20,7 +19,7 @@ const createCart = async (cartId: string, product: any, quantity: number) => {
     // Check if the product already exists in the cart
     const existingItem = await prisma.cartItems.findFirst({
       where: {
-        cartId,
+        cartId: cart.id,
         productId: product.productId,
       },
     });
@@ -39,7 +38,7 @@ const createCart = async (cartId: string, product: any, quantity: number) => {
       // Create new cart item
       return await prisma.cartItems.create({
         data: {
-          cartId,
+          cartId: cart.id,
           productId: product.productId,
           name: product.name,
           price: product.retails_price || product.price,

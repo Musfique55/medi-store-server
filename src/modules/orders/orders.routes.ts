@@ -9,16 +9,6 @@ const routes = Router();
 
 // customer routes
 routes.get("/", auth(roles.CUSTOMER), orderController.getUserOrders);
-routes.get(
-  "/delivered",
-  auth(roles.CUSTOMER),
-  orderController.getDeliveredOrders,
-);
-routes.get(
-  "/status/:status",
-  auth(roles.CUSTOMER),
-  orderController.getOrdersByStatus,
-);
 routes.get("/:id", auth(roles.CUSTOMER), orderController.getOrderDetails);
 routes.post(
   "/",

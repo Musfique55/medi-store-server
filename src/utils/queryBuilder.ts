@@ -56,10 +56,12 @@ export class QueryBuilder<T, TWhereInput, TInclude> {
               const [relation, nestedRelation, nestedField] = parts;
               return {
                 [relation!]: {
-                  [nestedRelation!]: {
-                    [nestedField!]: {
-                      contains: searchTerm,
-                      mode: "insensitive",
+                  some: {
+                    [nestedRelation!]: {
+                      [nestedField!]: {
+                        contains: searchTerm,
+                        mode: "insensitive",
+                      },
                     },
                   },
                 },

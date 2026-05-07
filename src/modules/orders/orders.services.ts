@@ -1,11 +1,15 @@
 import {
   DeliveryMethods,
+  Order,
   OrderStatus,
   PaymentStatus,
   Prisma,
 } from "../../generated/prisma/client";
+import { OrderInclude, OrderWhereInput } from "../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
 import { CreateOrderInput } from "../../types/order";
+import { IQueryParams } from "../../types/queryBuilder";
+import { QueryBuilder } from "../../utils/queryBuilder";
 
 const newOrder = async (data: CreateOrderInput, cart_id: string) => {
   try {
@@ -68,35 +72,35 @@ const newOrder = async (data: CreateOrderInput, cart_id: string) => {
   }
 };
 
-const getAllOrders = async () => {
+const getAllOrders = async (query: IQueryParams) => {
   try {
-    const data = await prisma.order.findMany({
-      include: {
-        customer: true,
-        order_items: {
-          include: {
-            product: true,
-          },
-        },
-        reviews: true,
+    const queryBuilder = new QueryBuilder<Order, OrderWhereInput, OrderInclude>(
+      prisma.order,
+      query,
+      {
+        searchableFields: ["customer_id", "order_items.product.name"],
+        filterableFields: ["order_status", "delivery_method", "payment_status"],
       },
-    });
+    );
+    const data = await queryBuilder
+      .include({
+        customer: true,
+      })
+      .omit({
+        customer_id: true,
+      })
+      .search()
+      .filter()
+      .paginate()
+      .execute();
 
-    const formattedStructure = data.map((item) => ({
-      ...item,
-      order_items: item.order_items.map((o) => o.product),
-    }));
-
-    return formattedStructure;
+    return data;
   } catch (error) {
     throw error;
   }
 };
 
-const updateOrderStatus = async (
-  id: string,
-  { status }: { status: OrderStatus },
-) => {
+const updateOrderStatus = async (id: string, status: OrderStatus) => {
   try {
     const data = await prisma.order.update({
       where: {
@@ -113,10 +117,18 @@ const updateOrderStatus = async (
   }
 };
 
-const getSellersOrder = async (seller_id: string) => {
+const getSellersOrder = async (seller_id: string, query: IQueryParams) => {
   try {
-    const result = await prisma.order.findMany({
-      where: {
+    const queryBuilder = new QueryBuilder<Order, OrderWhereInput, OrderInclude>(
+      prisma.order,
+      query,
+      {
+        searchableFields: ["customer_id", "order_items.product.name"],
+        filterableFields: ["order_status", "delivery_method", "payment_status"],
+      },
+    );
+    const result = await queryBuilder
+      .where({
         order_items: {
           some: {
             product: {
@@ -124,8 +136,8 @@ const getSellersOrder = async (seller_id: string) => {
             },
           },
         },
-      },
-      include: {
+      })
+      .include({
         customer: {
           select: {
             id: true,
@@ -135,23 +147,29 @@ const getSellersOrder = async (seller_id: string) => {
           },
         },
         order_items: {
-          where: {
+          include: {
             product: {
-              seller_id: seller_id,
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                image_url: true,
+                retails_price: true,
+                purchase_price: true,
+                discount_type: true,
+                discount_value: true,
+              },
             },
           },
-          include: {
-            product: true,
-          },
         },
-      },
-      omit: {
+      })
+      .omit({
         customer_id: true,
-      },
-      orderBy: {
-        created_at: "desc",
-      },
-    });
+      })
+      .search()
+      .filter()
+      .paginate()
+      .execute();
 
     return result;
   } catch (error) {
@@ -159,107 +177,56 @@ const getSellersOrder = async (seller_id: string) => {
   }
 };
 
-const getUserOrders = async (user_id: string) => {
+const getUserOrders = async (user_id: string, query: IQueryParams) => {
   try {
-    const data = await prisma.order.findMany({
-      where: {
-        customer_id: user_id,
+    const queryBuilder = new QueryBuilder<Order, OrderWhereInput, OrderInclude>(
+      prisma.order,
+      query,
+      {
+        searchableFields: ["customer_id", "order_items.product.name"],
+        filterableFields: ["order_status", "delivery_method", "payment_status"],
       },
-      include: {
+    );
+    const data = await queryBuilder
+      .where({ customer_id: user_id, order_status: { not: "CANCELLED" } })
+      .include({
         order_items: {
           select: {
             product: {
-              omit: {
-                category_id: true,
-                purchase_price: true,
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                image_url: true,
+                retails_price: true,
+                discount_type: true,
+                discount_value: true,
               },
             },
           },
         },
-      },
-      omit: {
+      })
+      .omit({
         customer_id: true,
-      },
-    });
+      })
+      .search()
+      .filter()
+      .paginate()
+      .execute();
 
-    const formattedStructure = data.map((item) => ({
+    type OrderWithItems = Order & {
+      order_items: { product: Record<string, unknown> }[];
+    };
+
+    const formattedStructure = (data.data as OrderWithItems[]).map((item) => ({
       ...item,
       order_items: item.order_items.map((o) => o.product),
     }));
 
-    return formattedStructure;
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
-};
-
-const getDeliveredOrders = async (user_id: string) => {
-  try {
-    const data = await prisma.order.findMany({
-      where: {
-        customer_id: user_id,
-        order_status: "DELIVERED",
-      },
-      include: {
-        order_items: {
-          select: {
-            product: {
-              omit: {
-                category_id: true,
-                purchase_price: true,
-              },
-            },
-          },
-        },
-      },
-      omit: {
-        customer_id: true,
-      },
-    });
-
-    const formattedStructure = data.map((item) => ({
-      ...item,
-      order_items: item.order_items.map((o) => o.product),
-    }));
-
-    return formattedStructure;
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
-};
-
-const getOrdersByStatus = async (user_id: string, status: OrderStatus) => {
-  try {
-    const data = await prisma.order.findMany({
-      where: {
-        customer_id: user_id,
-        order_status: status,
-      },
-      include: {
-        order_items: {
-          select: {
-            product: {
-              omit: {
-                category_id: true,
-                purchase_price: true,
-              },
-            },
-          },
-        },
-      },
-      omit: {
-        customer_id: true,
-      },
-    });
-
-    const formattedStructure = data.map((item) => ({
-      ...item,
-      order_items: item.order_items.map((o) => o.product),
-    }));
-
-    return formattedStructure;
+    return {
+      ...data,
+      data: formattedStructure,
+    };
   } catch (error) {
     console.log(error);
     throw error;
@@ -310,6 +277,4 @@ export const orderServices = {
   getUserOrders,
   getOrderDetails,
   getAllOrders,
-  getOrdersByStatus,
-  getDeliveredOrders,
 };
