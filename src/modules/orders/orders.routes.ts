@@ -12,7 +12,7 @@ routes.get("/", auth(roles.CUSTOMER), orderController.getUserOrders);
 routes.get("/:id", auth(roles.CUSTOMER), orderController.getOrderDetails);
 routes.post(
   "/",
-  auth(roles.CUSTOMER),
+  auth(roles.CUSTOMER, roles.ADMIN, roles.SELLER),
   orderRequestValidator(orderValidator.orderItemSchema),
   orderController.newOrder,
 );

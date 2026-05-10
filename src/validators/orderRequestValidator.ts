@@ -5,6 +5,7 @@ import { discountType } from "../generated/prisma/enums";
 import { Prisma } from "../generated/prisma/client";
 import { OrderItemInput } from "../types/order";
 import { nanoid } from "nanoid";
+import { AppError } from "../helper/AppError";
 
 const calculateDiscountedPrice = (
   type: discountType,
@@ -40,7 +41,7 @@ export const orderRequestValidator =
       result.data.customer_id = req.user?.id;
       result.data.order_number = generateOrderNumber;
 
-      const products = await prisma.medicine.findMany({
+      const dbProducts = await prisma.medicine.findMany({
         where: {
           id: {
             in: cart.map((item) => item.product_id),
@@ -57,7 +58,7 @@ export const orderRequestValidator =
         },
       });
 
-      if (products.length !== cart.length) {
+      if (dbProducts.length !== cart.length) {
         return res.status(400).json({
           message: "Validation failed",
           success: false,
@@ -65,14 +66,14 @@ export const orderRequestValidator =
         });
       }
 
-      for (const product of products) {
-        const dbProduct = cart.find((item) => item.product_id === product.id);
+      for (const product of dbProducts) {
+        const cartItem = cart.find((item) => item.product_id === product.id);
 
-        if (!dbProduct) {
+        if (!cartItem) {
           continue;
         }
 
-        if (dbProduct.quantity > product.stock) {
+        if (cartItem.quantity > product.stock) {
           return res.status(400).json({
             message: "Validation failed",
             success: false,
@@ -90,27 +91,27 @@ export const orderRequestValidator =
 
         if (product.discount_type !== discountType.NONE) {
           if (product.discount_type === discountType.PERCENTAGE) {
-            dbProduct.unit_price = calculateDiscountedPrice(
+            cartItem.unit_price = calculateDiscountedPrice(
               product.discount_type,
               product.discount_value!,
               Number(product.retails_price),
             );
           } else {
-            dbProduct.unit_price = calculateDiscountedPrice(
+            cartItem.unit_price = calculateDiscountedPrice(
               product.discount_type,
               product.discount_value!,
               Number(product.retails_price),
             );
           }
         } else {
-          dbProduct.unit_price = Number(product.retails_price);
+          cartItem.unit_price = Number(product.retails_price);
         }
       }
 
       const subtotal = cart.reduce(
         (total: Prisma.Decimal, item) =>
           total.add(new Prisma.Decimal(item.unit_price).mul(item.quantity)),
-        new Prisma.Decimal(0),
+        new Prisma.Decimal("0.00"),
       );
 
       const total = subtotal;
@@ -121,10 +122,9 @@ export const orderRequestValidator =
       req.body = result.data;
       next();
     } catch (error: any) {
-      console.log("validation error", error);
-      res.status(500).json({
-        message: "Internal Server Error",
-        success: false,
-      });
+      throw new AppError(
+        error.message || "Internal Server Error",
+        error.statusCode || 500,
+      );
     }
   };

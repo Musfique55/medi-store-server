@@ -7,6 +7,8 @@ import { globalErrorHandler } from "./middleware/globalErrorHandler";
 import { notFound } from "./middleware/notFound";
 import cookieParser from "cookie-parser";
 import path from "path";
+import cron from "node-cron";
+import { cartServices } from "./modules/cart/cart.services";
 
 const app = express();
 
@@ -26,6 +28,12 @@ app.set("view-engine", "ejs");
 app.set("views", path.resolve(process.cwd(), "src/templates"));
 
 app.all("/api/auth/*splat", toNodeHandler(auth));
+
+//this will run the clearExpiredCart function every 10 minutes
+cron.schedule("*/10 * * * *", async () => {
+  console.log(new Date());
+  await cartServices.clearExpiredCart();
+});
 
 app.get("/", (req, res) => {
   res.status(200).send("hello world");

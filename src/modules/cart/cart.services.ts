@@ -1,3 +1,4 @@
+import { AppError } from "../../helper/AppError";
 import { prisma } from "../../lib/prisma";
 
 const createCart = async (cartId: string, product: any, quantity: number) => {
@@ -16,34 +17,83 @@ const createCart = async (cartId: string, product: any, quantity: number) => {
       });
     }
 
+    const medProduct = await prisma.medicine.findUnique({
+      where: {
+        id: product?.product_id,
+      },
+    });
+
+    if (!medProduct) {
+      throw new AppError("product not found", 404);
+    }
+
+    if (medProduct.stock < quantity) {
+      throw new AppError("stock not available", 400);
+    }
+
     // Check if the product already exists in the cart
     const existingItem = await prisma.cartItems.findFirst({
       where: {
-        cartId: cart.id,
-        productId: product.productId,
+        cart_id: cart.id,
+        product_id: product.product_id,
       },
     });
 
     if (existingItem) {
       // Update quantity if item exists
-      return await prisma.cartItems.update({
-        where: { id: existingItem.id },
-        data: {
-          quantity: {
-            increment: quantity,
+      return await prisma.$transaction(async (tx) => {
+        const updateItem = await tx.cartItems.update({
+          where: { id: existingItem.id },
+          data: {
+            quantity: {
+              increment: quantity,
+            },
           },
-        },
+        });
+        await tx.medicine.update({
+          where: {
+            id: product.product_id,
+          },
+          data: {
+            reserved_stock: {
+              increment: quantity,
+            },
+            stock: {
+              decrement: quantity,
+            },
+          },
+        });
+
+        return updateItem;
       });
     } else {
       // Create new cart item
-      return await prisma.cartItems.create({
-        data: {
-          cartId: cart.id,
-          productId: product.productId,
-          name: product.name,
-          price: product.retails_price || product.price,
-          quantity,
-        },
+      return await prisma.$transaction(async (tx) => {
+        const newCartItem = await tx.cartItems.create({
+          data: {
+            cart_id: cart.id,
+            product_id: product.product_id,
+            name: product.name,
+            price: product.retails_price || product.price,
+            quantity,
+          },
+        });
+
+        await tx.medicine.update({
+          where: {
+            id: product.product_id,
+          },
+          data: {
+            reserved_stock: {
+              increment: quantity,
+            },
+            stock: {
+              decrement: quantity,
+            },
+          },
+        });
+
+        return newCartItem;
       });
     }
   } catch (error) {
@@ -64,7 +114,7 @@ const getCart = async (cartId: string) => {
     });
 
     if (!res) {
-      return [];
+      return { items: [] };
     }
 
     return res;
@@ -85,7 +135,7 @@ const removeProductFromCart = async (productId: string, cartId: string) => {
     });
 
     if (!existingItem) {
-      throw new Error("item not found");
+      throw new AppError("item not found", 404);
     }
 
     if (existingItem.items.length === 1) {
@@ -96,13 +146,31 @@ const removeProductFromCart = async (productId: string, cartId: string) => {
       });
     }
 
-    const res = await prisma.cartItems.delete({
-      where: {
-        productId_cartId: {
-          productId,
-          cartId,
+    const res = await prisma.$transaction(async (tx) => {
+      const deletedItem = await tx.cartItems.delete({
+        where: {
+          product_id_cart_id: {
+            product_id: productId,
+            cart_id: cartId,
+          },
         },
-      },
+      });
+
+      await tx.medicine.update({
+        where: {
+          id: productId,
+        },
+        data: {
+          reserved_stock: {
+            decrement: deletedItem.quantity,
+          },
+          stock: {
+            increment: deletedItem.quantity,
+          },
+        },
+      });
+
+      return deletedItem;
     });
     return res;
   } catch (error) {
@@ -117,19 +185,66 @@ const updateQuantityFromCart = async (
   quantity: number,
 ) => {
   try {
-    const res = await prisma.cartItems.update({
-      where: {
-        productId_cartId: {
-          productId,
-          cartId,
+    let res;
+    if (quantity > 0) {
+      const product = await prisma.medicine.findUnique({
+        where: {
+          id: productId,
         },
-      },
-      data: {
-        quantity: {
-          set: quantity,
+      });
+      if (!product) {
+        throw new AppError("product not found", 404);
+      }
+
+      if (product.stock < quantity) {
+        throw new AppError("stock not available", 400);
+      }
+
+      const cartItems = await prisma.cartItems.findFirst({
+        where: {
+          product_id: productId,
+          cart_id: cartId,
         },
-      },
-    });
+      });
+
+      if (!cartItems) {
+        throw new AppError("item not found", 404);
+      }
+
+      res = await prisma.$transaction(async (tx) => {
+        const updatedCartItem = await tx.cartItems.update({
+          where: {
+            product_id_cart_id: {
+              product_id: productId,
+              cart_id: cartId,
+            },
+          },
+          data: {
+            quantity: {
+              set: quantity,
+            },
+          },
+        });
+
+        await tx.medicine.update({
+          where: {
+            id: productId,
+          },
+          data: {
+            reserved_stock: {
+              set: quantity,
+            },
+            stock: {
+              set: quantity,
+            },
+          },
+        });
+
+        return updatedCartItem;
+      });
+    } else {
+      res = await removeProductFromCart(productId, cartId);
+    }
     return res;
   } catch (error) {
     console.log(error);
@@ -176,7 +291,7 @@ const mergeCart = async (cartId: string, userId: string) => {
     return prisma.$transaction(async (tx) => {
       for (const item of guestCart.items) {
         const existingItem = userCart.items.find(
-          (i) => i.productId === item.productId,
+          (i) => i.product_id === item.product_id,
         );
 
         if (existingItem) {
@@ -193,8 +308,8 @@ const mergeCart = async (cartId: string, userId: string) => {
         } else {
           await tx.cartItems.create({
             data: {
-              cartId: userId,
-              productId: item.productId,
+              cart_id: userId,
+              product_id: item.product_id,
               name: item.name,
               price: item.price,
               quantity: item.quantity,
@@ -224,10 +339,56 @@ const mergeCart = async (cartId: string, userId: string) => {
   }
 };
 
+const clearExpiredCart = async () => {
+  try {
+    const expiredCarts = await prisma.cart.findMany({
+      where: {
+        expiresAt: {
+          lte: new Date(),
+        },
+      },
+      include: {
+        items: true,
+      },
+    });
+
+    await prisma.$transaction(async (tx) => {
+      for (const cart of expiredCarts) {
+        await tx.cart.delete({
+          where: {
+            id: cart.id,
+          },
+        });
+
+        for (const item of cart.items) {
+          await tx.medicine.update({
+            where: {
+              id: item.product_id,
+            },
+            data: {
+              reserved_stock: {
+                decrement: item.quantity,
+              },
+              stock: {
+                increment: item.quantity,
+              },
+            },
+          });
+        }
+      }
+    });
+
+    return { message: "Expired carts cleared successfully" };
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const cartServices = {
   createCart,
   getCart,
   removeProductFromCart,
   updateQuantityFromCart,
   mergeCart,
+  clearExpiredCart,
 };

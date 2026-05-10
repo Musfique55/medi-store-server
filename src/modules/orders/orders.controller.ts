@@ -1,7 +1,5 @@
 import { RequestHandler } from "express";
 import { orderServices } from "./orders.services";
-import { auth } from "../../lib/auth";
-import { OrderStatus } from "../../generated/prisma/enums";
 import { sendResponse } from "../../helper/sendResponse";
 import { AppError } from "../../helper/AppError";
 

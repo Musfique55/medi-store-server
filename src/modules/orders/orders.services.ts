@@ -192,13 +192,14 @@ const getUserOrders = async (user_id: string, query: IQueryParams) => {
       .include({
         order_items: {
           select: {
+            unit_price: true,
+            quantity: true,
             product: {
               select: {
                 id: true,
                 name: true,
                 description: true,
                 image_url: true,
-                retails_price: true,
                 discount_type: true,
                 discount_value: true,
               },
@@ -214,13 +215,18 @@ const getUserOrders = async (user_id: string, query: IQueryParams) => {
       .paginate()
       .execute();
 
-    type OrderWithItems = Order & {
-      order_items: { product: Record<string, unknown> }[];
-    };
+      
 
-    const formattedStructure = (data.data as OrderWithItems[]).map((item) => ({
+    const formattedStructure = data.data.map((item: any) => ({
       ...item,
-      order_items: item.order_items.map((o) => o.product),
+      order_items: item.order_items.map((oi: any) => {
+        const { product, ...rest } = oi;
+
+        return {
+          ...rest,
+          ...product,
+        };
+      }),
     }));
 
     return {
