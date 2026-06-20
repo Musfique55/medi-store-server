@@ -5,9 +5,8 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "npx tsx watch src/server.ts",
+    "dev": "node --import tsx --watch src/server.ts",
     "seed:admin": "npx tsx src/scripts/index.ts",
-    "update:slug": "npx tsx src/scripts/slug.ts",
     "build": "prisma generate && prisma migrate deploy && tsup src/server.ts --format esm --platform node --target node20 --outDir dist",
     "start": "node dist/server.js",
     "migrate": "prisma migrate dev",
@@ -20,6 +19,7 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
+    "@sentry/node": "^10.57.0",
     "better-auth": "^1.4.18",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",

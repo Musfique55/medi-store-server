@@ -85,7 +85,7 @@ const createCart = async (cartId: string, product: any, quantity: number) => {
           },
           data: {
             reserved_stock: {
-              increment: quantity,
+              set: quantity,
             },
             stock: {
               decrement: quantity,
@@ -109,7 +109,16 @@ const getCart = async (cartId: string) => {
         id: cartId,
       },
       include: {
-        items: true,
+        items: {
+          select: {
+            id: true,
+            product_id: true,
+            quantity: true,
+            name: true,
+            price: true,
+            image: true,
+          },
+        },
       },
     });
 
@@ -125,7 +134,7 @@ const getCart = async (cartId: string) => {
 
 const removeProductFromCart = async (productId: string, cartId: string) => {
   try {
-    const existingItem = await prisma.cart.findFirst({
+    const cart = await prisma.cart.findFirst({
       where: {
         id: cartId,
       },
@@ -134,38 +143,63 @@ const removeProductFromCart = async (productId: string, cartId: string) => {
       },
     });
 
-    if (!existingItem) {
+    if (!cart) {
       throw new AppError("item not found", 404);
     }
 
-    if (existingItem.items.length === 1) {
-      return await prisma.cart.delete({
-        where: {
-          id: cartId,
-        },
+    if (cart.items.length === 1) {
+      return await prisma.$transaction(async (tx) => {
+        await tx.medicine.update({
+          where: {
+            id: productId,
+          },
+          data: {
+            reserved_stock: {
+              set: 0,
+            },
+            stock: {
+              increment: cart.items[0]!.quantity,
+            },
+          },
+        });
+        return await tx.cart.delete({
+          where: {
+            id: cartId,
+          },
+        });
       });
     }
 
-    const res = await prisma.$transaction(async (tx) => {
-      const deletedItem = await tx.cartItems.delete({
-        where: {
-          product_id_cart_id: {
-            product_id: productId,
-            cart_id: cartId,
-          },
-        },
-      });
+    const cartItem = await prisma.cartItems.findFirst({
+      where: {
+        product_id: productId,
+        cart_id: cartId,
+      },
+    });
 
+    if (!cartItem) {
+      throw new AppError("item not found", 404);
+    }
+
+    const res = await prisma.$transaction(async (tx) => {
       await tx.medicine.update({
         where: {
           id: productId,
         },
         data: {
           reserved_stock: {
-            decrement: deletedItem.quantity,
+            decrement: cartItem.quantity,
           },
           stock: {
-            increment: deletedItem.quantity,
+            increment: cartItem.quantity,
+          },
+        },
+      });
+      const deletedItem = await tx.cartItems.delete({
+        where: {
+          product_id_cart_id: {
+            product_id: productId,
+            cart_id: cartId,
           },
         },
       });
@@ -180,6 +214,7 @@ const removeProductFromCart = async (productId: string, cartId: string) => {
 };
 
 const updateQuantityFromCart = async (
+  operation: "increment" | "decrement",
   productId: string,
   cartId: string,
   quantity: number,
@@ -196,49 +231,82 @@ const updateQuantityFromCart = async (
         throw new AppError("product not found", 404);
       }
 
-      if (product.stock < quantity) {
-        throw new AppError("stock not available", 400);
-      }
-
-      const cartItems = await prisma.cartItems.findFirst({
+      const cartItem = await prisma.cartItems.findFirst({
         where: {
           product_id: productId,
           cart_id: cartId,
         },
       });
 
-      if (!cartItems) {
+      if (!cartItem) {
         throw new AppError("item not found", 404);
       }
 
       res = await prisma.$transaction(async (tx) => {
-        const updatedCartItem = await tx.cartItems.update({
-          where: {
-            product_id_cart_id: {
-              product_id: productId,
-              cart_id: cartId,
-            },
-          },
-          data: {
-            quantity: {
-              set: quantity,
-            },
-          },
-        });
+        let updatedCartItem;
 
-        await tx.medicine.update({
-          where: {
-            id: productId,
-          },
-          data: {
-            reserved_stock: {
-              set: quantity,
+        if (operation === "increment") {
+          if (product.stock < quantity) {
+            throw new AppError("stock not available", 400);
+          }
+          updatedCartItem = await tx.cartItems.update({
+            where: {
+              product_id_cart_id: {
+                product_id: productId,
+                cart_id: cartId,
+              },
             },
-            stock: {
-              set: quantity,
+            data: {
+              quantity: {
+                set: quantity,
+              },
             },
-          },
-        });
+          });
+
+          await tx.medicine.update({
+            where: {
+              id: productId,
+            },
+            data: {
+              reserved_stock: {
+                set: quantity,
+              },
+              stock: {
+                decrement: quantity,
+              },
+            },
+          });
+        } else if (operation === "decrement") {
+          if (quantity < 0) {
+            throw new AppError("invalid quantity", 400);
+          }
+          updatedCartItem = await tx.cartItems.update({
+            where: {
+              product_id_cart_id: {
+                product_id: productId,
+                cart_id: cartId,
+              },
+            },
+            data: {
+              quantity: {
+                set: quantity,
+              },
+            },
+          });
+          await tx.medicine.update({
+            where: {
+              id: productId,
+            },
+            data: {
+              reserved_stock: {
+                decrement: cartItem.quantity - quantity,
+              },
+              stock: {
+                increment: cartItem.quantity - quantity,
+              },
+            },
+          });
+        }
 
         return updatedCartItem;
       });

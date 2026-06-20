@@ -29,7 +29,7 @@ export const auth = (...roles: roles[]) => {
         req.cookies["better-auth.session_token"] ||
         req.cookies["_Secure-better-auth.session_token"];
 
-
+      console.log(currentSessionToken);
       if (!currentSessionToken) {
         throw new AppError("Unauthorized", 401);
       }
@@ -47,14 +47,13 @@ export const auth = (...roles: roles[]) => {
         throw new AppError("invalid session token", 401);
       }
 
-
       if (session && session?.user) {
         if (roles.length > 0 && !roles.includes(session.user.role as roles)) {
           throw new AppError("Forbidden : Insufficient permissions", 403);
         }
       }
 
-      const accessToken = cookieUtils.getCookie(req,"accessToken");
+      const accessToken = cookieUtils.getCookie(req, "accessToken");
       if (!accessToken && !isRefreshTokenRoute) {
         throw new AppError("unauthorized", 401);
       }

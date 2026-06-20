@@ -1,43 +1,44 @@
 import { RequestHandler } from "express";
 import { userServices } from "./user.services";
+import { sendResponse } from "../../helper/sendResponse";
+import { AppError } from "../../helper/AppError";
 
-const getUsers : RequestHandler = async (req,res) => {
-    try {
-        const result = await userServices.getUsers();
-        res.status(200).json({
-            message : "user created successfully",
-            status : true,
-            data : result
-        })
-    } catch (error : any) {
-        console.log(error);
-        res.status(error.status || 500).json({
-            message : error.message || "Server internal Error",
-            status : false
-        })
-    }
-}
+const getUsers: RequestHandler = async (req, res) => {
+  try {
+    const result = await userServices.getUsers();
+    sendResponse(res, {
+      data: result,
+      message: "users fetched successfully",
+      success: true,
+      statusCode: 200,
+    });
+  } catch (error: any) {
+    throw new AppError(
+      error.message || "internal error",
+      error.statusCode || 500,
+    );
+  }
+};
 
-const updateUsersStatus : RequestHandler = async (req,res) => {
-    try {
-        const {id,status} = req.body;
-        const result = await userServices.updateUserStatus(id,status);
-        res.status(201).json({
-            message : "user status updated successfully",
-            status : true,
-            data : result
-        })
-    } catch (error : any) {
-        console.log(error);
-        res.status(error.status || 500).json({
-            message : error.message || "Server internal Error",
-            status : false
-        })
-    }
-}
-
+const updateUsersStatus: RequestHandler = async (req, res) => {
+  try {
+    const { id, status } = req.body;
+    const result = await userServices.updateUserStatus(id, status);
+    sendResponse(res, {
+      data: result,
+      message: "user status updated successfully",
+      success: true,
+      statusCode: 200,
+    });
+  } catch (error: any) {
+    throw new AppError(
+      error.message || "internal error",
+      error.statusCode || 500,
+    );
+  }
+};
 
 export const userController = {
-    getUsers,
-    updateUsersStatus
-}
+  getUsers,
+  updateUsersStatus,
+};

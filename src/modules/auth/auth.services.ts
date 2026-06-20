@@ -3,6 +3,7 @@ import { prisma } from "../../lib/prisma";
 import { AppError } from "../../helper/AppError";
 import { jwtUtils } from "../../utils/jwtUtils";
 import { JwtPayload } from "jsonwebtoken";
+import { roles } from "../../generated/prisma/enums";
 
 const getLoggedInUser = async (user_id: string) => {
   try {
@@ -31,6 +32,8 @@ const login = async (email: string, password: string) => {
       },
     });
 
+    console.log(session);
+
     if (!session) {
       throw new AppError("Invalid credentials", 400);
     }
@@ -53,8 +56,8 @@ const login = async (email: string, password: string) => {
       refreshToken,
     };
   } catch (error: any) {
-    console.log(error);
-    throw error;
+    // console.log(error);
+    throw new AppError(error.message, error.statusCode);
   }
 };
 
@@ -62,10 +65,12 @@ const register = async ({
   name,
   email,
   password,
+  role,
 }: {
   name: string;
   email: string;
   password: string;
+  role: roles;
 }) => {
   const user = await prisma.user.findUnique({
     where: {
@@ -82,6 +87,7 @@ const register = async ({
       name,
       email,
       password,
+      role,
     },
   });
 
@@ -104,22 +110,43 @@ const register = async ({
   };
 };
 
-const verifyEmailOtp = async (email: string,otp : string) => {
+const verifyEmailOtp = async (email: string, otp: string) => {
   const session = await auth.api.verifyEmailOTP({
     body: {
       email,
-      otp
+      otp,
     },
   });
 
-  return session;
-}
-const logout = async () => {
-  const session = await auth.api.signOut();
+  const tokenPayload = {
+    id: session.user.id,
+    email: session.user.email,
+    name: session.user.name,
+    role: session.user.role,
+    status: session.user.status,
+    emailVerified: session.user.emailVerified,
+  };
+
+  const accessToken = jwtUtils.createToken(tokenPayload);
+  const refreshToken = jwtUtils.createToken(tokenPayload);
+
+  return {
+    ...session,
+    accessToken,
+    refreshToken,
+  };
+};
+
+const logout = async (sessionToken: string) => {
+  const session = await auth.api.signOut({
+    headers: new Headers({
+      Authorization: `Bearer ${sessionToken}`,
+    }),
+  });
   return session;
 };
 
-const newRefreshToken = async (refreshToken: string,sessionToken : string) => {
+const newRefreshToken = async (refreshToken: string, sessionToken: string) => {
   const session = await prisma.session.findUnique({
     where: {
       token: sessionToken,
@@ -129,54 +156,54 @@ const newRefreshToken = async (refreshToken: string,sessionToken : string) => {
     },
   });
 
-  if(!session){
-    throw new AppError("Invalid session token",401);
+  if (!session) {
+    throw new AppError("Invalid session token", 401);
   }
 
   const MAX_LIFE = 30 * 24 * 60 * 60 * 1000;
 
-  if(Date.now() >= session.createdAt.getTime() + MAX_LIFE){
-    throw new AppError("Session token expired",401);
+  if (Date.now() >= session.createdAt.getTime() + MAX_LIFE) {
+    throw new AppError("Session token expired", 401);
   }
 
   const verifyRefreshToken = jwtUtils.verifyToken(refreshToken);
 
-  if(!verifyRefreshToken){
-    throw new AppError("Invalid refresh token",401);
+  if (!verifyRefreshToken) {
+    throw new AppError("Invalid refresh token", 401);
   }
-  
-  const verifyRefreshTokenData = jwtUtils.decodeToken(refreshToken) as JwtPayload;
+
+  const verifyRefreshTokenData = jwtUtils.decodeToken(
+    refreshToken,
+  ) as JwtPayload;
 
   const tokenPayload = {
-    id: verifyRefreshTokenData.id,
-    email: verifyRefreshTokenData.email,
-    name: verifyRefreshTokenData.name,
-    role: verifyRefreshTokenData.role,
-    status: verifyRefreshTokenData.status,
-    emailVerified: verifyRefreshTokenData.emailVerified,
-  }
+    id: verifyRefreshTokenData?.data?.id,
+    email: verifyRefreshTokenData?.data?.email,
+    name: verifyRefreshTokenData?.data?.name,
+    role: verifyRefreshTokenData?.data?.role,
+    status: verifyRefreshTokenData?.data?.status,
+    emailVerified: verifyRefreshTokenData?.data?.emailVerified,
+  };
 
   const accessToken = jwtUtils.createToken(tokenPayload);
   const newRefreshToken = jwtUtils.createToken(tokenPayload);
 
-
- const {token} = await prisma.session.update({
-    where : {
-      token : sessionToken
+  const { token } = await prisma.session.update({
+    where: {
+      token: sessionToken,
     },
-    data : {
-      expiresAt : new Date(Date.now() + 60 * 60 * 24 * 1000),
-      updatedAt : new Date()
-    }
-  })
+    data: {
+      expiresAt: new Date(Date.now() + 60 * 60 * 24 * 1000),
+      updatedAt: new Date(),
+    },
+  });
 
   return {
     accessToken,
-    refreshToken : newRefreshToken,
-    token
-  }
-
-}
+    refreshToken: newRefreshToken,
+    token,
+  };
+};
 
 export const authServices = {
   getLoggedInUser,
@@ -184,5 +211,5 @@ export const authServices = {
   register,
   logout,
   verifyEmailOtp,
-  newRefreshToken
+  newRefreshToken,
 };

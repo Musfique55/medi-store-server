@@ -215,8 +215,6 @@ const getUserOrders = async (user_id: string, query: IQueryParams) => {
       .paginate()
       .execute();
 
-      
-
     const formattedStructure = data.data.map((item: any) => ({
       ...item,
       order_items: item.order_items.map((oi: any) => {

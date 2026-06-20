@@ -1,4 +1,5 @@
 import express from "express";
+import * as Sentry from "@sentry/node";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
 import { routeHandlers } from "./route/route";
@@ -31,15 +32,20 @@ app.all("/api/auth/*splat", toNodeHandler(auth));
 
 //this will run the clearExpiredCart function every 10 minutes
 cron.schedule("*/10 * * * *", async () => {
-  console.log(new Date());
   await cartServices.clearExpiredCart();
 });
 
 app.get("/", (req, res) => {
-  res.status(200).send("hello world");
+  res.status(200).send("hello");
+});
+
+app.get("/sentry-debug", (req, res) => {
+  throw new Error("My first Sentry error!");
 });
 
 app.use("/api/v1", routeHandlers);
+
+Sentry.setupExpressErrorHandler(app);
 
 app.use(notFound);
 app.use(globalErrorHandler);

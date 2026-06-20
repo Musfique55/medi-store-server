@@ -129,6 +129,23 @@ const deleteMedicine: RequestHandler = async (req, res) => {
   }
 };
 
+const topMedicines: RequestHandler = async (req, res) => {
+  try {
+    const result = await medicineServices.topMedicines();
+    sendResponse(res, {
+      message: "top medicines fetched successfully",
+      success: true,
+      statusCode: 201,
+      data: result,
+    });
+  } catch (error: any) {
+    throw new AppError(
+      error.message || "Internal Server Error",
+      error.statusCode || 500,
+    );
+  }
+};
+
 export const medicineController = {
   createMedicine,
   getMedicines,
@@ -136,4 +153,5 @@ export const medicineController = {
   updateStocks,
   updateMedicine,
   deleteMedicine,
+  topMedicines,
 };

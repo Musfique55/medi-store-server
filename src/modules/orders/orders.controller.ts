@@ -53,7 +53,8 @@ const getSellersOrder: RequestHandler = async (req, res) => {
       message: "Orders fetched successfully",
       success: true,
       statusCode: 200,
-      data: result,
+      data: result.data,
+      meta: result.meta,
     });
   } catch (error: any) {
     throw new AppError(
@@ -62,6 +63,7 @@ const getSellersOrder: RequestHandler = async (req, res) => {
     );
   }
 };
+
 const getUserOrders: RequestHandler = async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -112,6 +114,7 @@ const getOrderDetails: RequestHandler = async (req, res) => {
     );
   }
 };
+
 const getAllOrders: RequestHandler = async (req, res) => {
   try {
     const result = await orderServices.getAllOrders(req.query);

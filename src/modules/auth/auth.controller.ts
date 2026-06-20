@@ -16,8 +16,8 @@ const getLoggedInUser = catchAsync(async (req: Request, res: Response) => {
 });
 
 const register = catchAsync(async (req: Request, res: Response) => {
-  const { name, email, password } = req.body;
-  const result = await authServices.register({ name, email, password });
+  const { name, email, password, role } = req.body;
+  const result = await authServices.register({ name, email, password, role });
 
   cookieUtils.setCookie(res, "accessToken", result.accessToken, {
     maxAge: 60 * 15 * 1000,
@@ -71,7 +71,8 @@ const verifyEmailOtp = catchAsync(async (req: Request, res: Response) => {
 });
 
 const logout = catchAsync(async (req: Request, res: Response) => {
-  const result = await authServices.logout();
+  const sessionToken = req.cookies["better-auth.session_token"];
+  const result = await authServices.logout(sessionToken);
   sendResponse(res, {
     message: "user logged out successfully",
     success: true,

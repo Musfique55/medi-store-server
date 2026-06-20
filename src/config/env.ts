@@ -4,6 +4,7 @@ interface envVars {
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_URL: string;
   APP_URL: string;
+  API_URL: string;
   JWT_SECRET: string;
   EMAIL: {
     EMAIL_SENDER_SMTP_USER: string;
@@ -11,8 +12,9 @@ interface envVars {
     EMAIL_SENDER_SMTP_HOST: string;
     EMAIL_SENDER_SMTP_PORT: string;
   };
-  ADMIN_EMAIL : string;
-  ADMIN_PASS : string;
+  ADMIN_EMAIL: string;
+  ADMIN_PASS: string;
+  SENTRY_DSN?: string;
 }
 
 const loadEnvs = () => {
@@ -28,7 +30,8 @@ const loadEnvs = () => {
     "EMAIL_SENDER_SMTP_HOST",
     "EMAIL_SENDER_SMTP_PORT",
     "ADMIN_EMAIL",
-    "ADMIN_PASS"
+    "ADMIN_PASS",
+    "API_URL",
   ];
 
   envs.forEach((env) => {
@@ -44,15 +47,18 @@ const loadEnvs = () => {
     BETTER_AUTH_URL: process.env.BETTER_AUTH_URL as string,
     APP_URL: process.env.APP_URL as string,
     JWT_SECRET: process.env.JWT_SECRET as string,
-    EMAIL : {
-        EMAIL_SENDER_SMTP_USER: process.env.EMAIL_SENDER_SMTP_USER as string,
-        EMAIL_SENDER_SMTP_PASSWORD: process.env.EMAIL_SENDER_SMTP_PASSWORD as string,
-        EMAIL_SENDER_SMTP_HOST: process.env.EMAIL_SENDER_SMTP_HOST as string,
-        EMAIL_SENDER_SMTP_PORT: process.env.EMAIL_SENDER_SMTP_PORT as string,
+    EMAIL: {
+      EMAIL_SENDER_SMTP_USER: process.env.EMAIL_SENDER_SMTP_USER as string,
+      EMAIL_SENDER_SMTP_PASSWORD: process.env
+        .EMAIL_SENDER_SMTP_PASSWORD as string,
+      EMAIL_SENDER_SMTP_HOST: process.env.EMAIL_SENDER_SMTP_HOST as string,
+      EMAIL_SENDER_SMTP_PORT: process.env.EMAIL_SENDER_SMTP_PORT as string,
     },
-    ADMIN_EMAIL : process.env.ADMIN_EMAIL as string,
-    ADMIN_PASS : process.env.ADMIN_PASS as string
-  }
+    ADMIN_EMAIL: process.env.ADMIN_EMAIL as string,
+    ADMIN_PASS: process.env.ADMIN_PASS as string,
+    API_URL: process.env.API_URL as string,
+    SENTRY_DSN: process.env.SENTRY_DSN,
+  };
 };
 
 export const envVars = loadEnvs();

@@ -48,9 +48,10 @@ const removeProductFromCart = catchAsync(
 const updateQuantityFromCart = catchAsync(
   async (req: Request, res: Response) => {
     const { productId } = req.params;
-    const { quantity } = req.body;
+    const { quantity, operation } = req.body;
     const cartId = req.cookies["cart_id"];
     const result = await cartServices.updateQuantityFromCart(
+      operation,
       productId as string,
       cartId as string,
       quantity as number,

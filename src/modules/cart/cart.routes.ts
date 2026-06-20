@@ -9,6 +9,10 @@ router.get("/", cartController.getCart);
 router.post("/", cartController.createCart);
 router.delete("/:productId", cartController.removeProductFromCart);
 router.patch("/:productId", cartController.updateQuantityFromCart);
-router.post("/merge", auth(roles.CUSTOMER), cartController.mergeCart);
+router.post(
+  "/merge",
+  auth(roles.CUSTOMER, roles.ADMIN, roles.SELLER),
+  cartController.mergeCart,
+);
 
 export const cartRoutes = router;

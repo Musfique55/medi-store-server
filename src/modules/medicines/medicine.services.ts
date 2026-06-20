@@ -224,6 +224,55 @@ const deleteMedicine = async (id: string) => {
   }
 };
 
+const topMedicines = async () => {
+  try {
+    const topItems = await prisma.orderItems.groupBy({
+      by: ["product_id"],
+      _count: {
+        product_id: true,
+        order_id: true,
+      },
+      _sum: {
+        quantity: true,
+      },
+      orderBy: {
+        _sum: { quantity: "desc" },
+      },
+      take: 10,
+    });
+
+    const medicineIds = topItems.map((item) => item.product_id);
+
+    const medicines = await prisma.medicine.findMany({
+      where: {
+        id: {
+          in: medicineIds,
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        retails_price: true,
+        image_url: true,
+        stock: true,
+      },
+    });
+
+    const medicineMap = new Map(medicines.map((item) => [item.id, item]));
+
+    const result = topItems.map((item) => ({
+      ...medicineMap.get(item.product_id),
+      totalSold: item._sum.quantity,
+      totalOrders: item._count.order_id,
+    }));
+
+    return result;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const medicineServices = {
   createMedicine,
   getMedicine,
@@ -231,4 +280,5 @@ export const medicineServices = {
   updateStocks,
   updateMedicine,
   deleteMedicine,
+  topMedicines,
 };

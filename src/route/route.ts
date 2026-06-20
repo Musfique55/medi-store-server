@@ -12,34 +12,30 @@ import { userAdminRoutes } from "../modules/users/user.admin.routes";
 import { categoryAdminRoutes } from "../modules/categories/category.admin.routes";
 import { manufacturerAdminRoutes } from "../modules/manufacturer/manufacturer.admin.route";
 import { sellerMedicineRoutes } from "../modules/medicines/medicine.seller.routes";
+import { sellerAnalyticsRoutes } from "../modules/seller/seller.routes";
 
 const routes = Router();
 
 // admin routes
-routes.use("/admin/users",userAdminRoutes);
-routes.use("/admin/categories",categoryAdminRoutes);
-routes.use("/admin/manufacturer",manufacturerAdminRoutes);
-routes.use("/admin/orders",adminOrderRoutes);
+routes.use("/admin/users", userAdminRoutes);
+routes.use("/admin/categories", categoryAdminRoutes);
+routes.use("/admin/manufacturer", manufacturerAdminRoutes);
+routes.use("/admin/orders", adminOrderRoutes);
 
 // for all roles expect public
-routes.use("/auth",authRoutes);
-
+routes.use("/auth", authRoutes);
 
 // customer routes
-routes.use("/medicines",medicineRoutes);
-routes.use("/categories",categoryRoutes);
-routes.use("/manufacturer",manufacturerRoutes);
-routes.use("/orders",orderRoutes);
-routes.use("/reviews",reviewsRoutes);
-routes.use("/cart",cartRoutes);
-
+routes.use("/medicines", medicineRoutes);
+routes.use("/categories", categoryRoutes);
+routes.use("/manufacturer", manufacturerRoutes);
+routes.use("/orders", orderRoutes);
+routes.use("/reviews", reviewsRoutes);
+routes.use("/cart", cartRoutes);
 
 // seller routes
-routes.use("/seller/medicines",sellerMedicineRoutes);
-routes.use("/seller/orders",sellerOrderRoutes);
-
-
-
-
+routes.use("/seller/medicines", sellerMedicineRoutes);
+routes.use("/seller/orders", sellerOrderRoutes);
+routes.use("/seller/analytics", sellerAnalyticsRoutes);
 
 export const routeHandlers = routes;
