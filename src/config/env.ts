@@ -15,6 +15,7 @@ interface envVars {
   ADMIN_EMAIL: string;
   ADMIN_PASS: string;
   SENTRY_DSN?: string;
+  REDIS_URL: string;
 }
 
 const loadEnvs = () => {
@@ -32,6 +33,7 @@ const loadEnvs = () => {
     "ADMIN_EMAIL",
     "ADMIN_PASS",
     "API_URL",
+    "REDIS_URL",
   ];
 
   envs.forEach((env) => {
@@ -58,6 +60,7 @@ const loadEnvs = () => {
     ADMIN_PASS: process.env.ADMIN_PASS as string,
     API_URL: process.env.API_URL as string,
     SENTRY_DSN: process.env.SENTRY_DSN,
+    REDIS_URL: process.env.REDIS_URL as string,
   };
 };
 

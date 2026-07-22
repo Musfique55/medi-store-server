@@ -11,8 +11,11 @@ import path from "path";
 import cron from "node-cron";
 import { cartServices } from "./modules/cart/cart.services";
 import redis from "redis";
+import { envVars } from "./config/env";
 
-export const redisClient = redis.createClient();
+export const redisClient = redis.createClient({
+  url: envVars.REDIS_URL,
+});
 
 (async () => {
   redisClient.on("error", (err) => console.log("redis error:", err));
