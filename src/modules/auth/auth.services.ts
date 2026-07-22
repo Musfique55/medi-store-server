@@ -32,8 +32,6 @@ const login = async (email: string, password: string) => {
       },
     });
 
-    console.log(session);
-
     if (!session) {
       throw new AppError("Invalid credentials", 400);
     }

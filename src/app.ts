@@ -10,6 +10,21 @@ import cookieParser from "cookie-parser";
 import path from "path";
 import cron from "node-cron";
 import { cartServices } from "./modules/cart/cart.services";
+import redis from "redis";
+
+export const redisClient = redis.createClient();
+
+(async () => {
+  redisClient.on("error", (err) => console.log("redis error:", err));
+
+  redisClient.on("ready", () => {
+    console.log("redis client started");
+  });
+
+  await redisClient.connect();
+
+  await redisClient.ping();
+})();
 
 const app = express();
 

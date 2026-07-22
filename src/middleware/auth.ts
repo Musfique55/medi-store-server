@@ -29,7 +29,6 @@ export const auth = (...roles: roles[]) => {
         req.cookies["better-auth.session_token"] ||
         req.cookies["_Secure-better-auth.session_token"];
 
-      console.log(currentSessionToken);
       if (!currentSessionToken) {
         throw new AppError("Unauthorized", 401);
       }

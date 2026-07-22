@@ -100,36 +100,54 @@ const getMedicines = async (
       .paginate()
       .execute();
 
-    const d = await prisma.medicine.findMany({
-      where: {
-        AND: [
-          {
-            OR: [
-              {
-                name: {
-                  contains: "",
-                  mode: "insensitive",
-                },
-              },
-              {
-                description: {
-                  contains: "",
-                  mode: "insensitive",
-                },
-              },
-            ],
-          },
-          {
-            manufacturer: {
-              name: {
-                contains: "new",
-                mode: "insensitive",
-              },
-            },
-          },
-        ],
-      },
+    return result;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const getSellersMedicine = async (
+  queryParams: IQueryParams,
+  userId: string,
+) => {
+  try {
+    const queryBuilder = new QueryBuilder<
+      Medicine,
+      MedicineWhereInput,
+      MedicineInclude
+    >(prisma.medicine, queryParams, {
+      searchableFields: ["name", "description"],
+      filterableFields: [
+        "stock",
+        "is_featured",
+        "retails_price",
+        "manufacturer.name",
+      ],
     });
+
+    const result = await queryBuilder
+      .where({
+        seller_id: userId,
+      })
+      .include({
+        category: {
+          select: {
+            category_name: true,
+            slug: true,
+          },
+        },
+        manufacturer: {
+          select: {
+            name: true,
+          },
+        },
+        seller: false,
+      })
+      .search()
+      // .filter()
+      .paginate()
+      .omit({ seller_id: true, category_id: true, manufacturer_id: true })
+      .execute();
 
     return result;
   } catch (error) {
@@ -281,4 +299,5 @@ export const medicineServices = {
   updateMedicine,
   deleteMedicine,
   topMedicines,
+  getSellersMedicine,
 };

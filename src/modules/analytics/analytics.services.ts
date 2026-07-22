@@ -36,7 +36,7 @@ const getSellersAnalytics = async (userId: string) => {
   FROM monthly_metrics;
     `;
     return (
-      stats[0] || {
+      (stats as any)[0] || {
         total_products: 0,
         total_orders: 0,
         total_revenue: 0,
