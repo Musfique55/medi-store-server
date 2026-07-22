@@ -12,7 +12,7 @@ export async function authRateLimiter(
 ) {
   try {
     const clientIp = req.ip || "unknown";
-    const rateLimiterKey = `auth_rate_limit_${clientIp}`;
+    const rateLimiterKey = `auth_rate_limit:${req.path}:${clientIp}`;
     const multi = redisClient.multi();
     multi.incr(rateLimiterKey);
     multi.expire(rateLimiterKey, RATE_LIMIT_WINDOW_SECONDS);

@@ -12,8 +12,8 @@ routes.get(
   authController.getLoggedInUser,
 );
 routes.post("/login", authRateLimiter, authController.login);
-routes.post("/register", authController.register);
-routes.post("/verify-email", authController.verifyEmailOtp);
+routes.post("/register", authRateLimiter, authController.register);
+routes.post("/verify-email", authRateLimiter, authController.verifyEmailOtp);
 routes.post("/logout", authController.logout);
 routes.post(
   "/refresh-token",
