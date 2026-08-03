@@ -59,24 +59,26 @@ const login = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const verifyEmailOtp = catchAsync(async (req: Request, res: Response) => {
-  const { email, otp } = req.body;
-  const result = await authServices.verifyEmailOtp(email, otp);
-  sendResponse(res, {
-    message: "email verified successfully",
-    success: true,
-    data: result,
-    statusCode: 200,
-  });
-});
+// const verifyEmailOtp = catchAsync(async (req: Request, res: Response) => {
+//   const { email, otp } = req.body;
+//   const result = await authServices.verifyEmailOtp(email, otp);
+//   sendResponse(res, {
+//     message: "email verified successfully",
+//     success: true,
+//     data: result,
+//     statusCode: 200,
+//   });
+// });
 
 const logout = catchAsync(async (req: Request, res: Response) => {
   const sessionToken = req.cookies["better-auth.session_token"];
-  const result = await authServices.logout(sessionToken);
+  await authServices.logout(sessionToken);
+  cookieUtils.clearCookie(res, "accessToken");
+  cookieUtils.clearCookie(res, "refreshToken");
+  cookieUtils.clearCookie(res, "better-auth.session_token");
   sendResponse(res, {
     message: "user logged out successfully",
     success: true,
-    data: result,
     statusCode: 200,
   });
 });
@@ -107,6 +109,6 @@ export const authController = {
   login,
   register,
   logout,
-  verifyEmailOtp,
+  // verifyEmailOtp,
   newRefreshToken,
 };
