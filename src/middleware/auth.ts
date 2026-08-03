@@ -21,10 +21,6 @@ declare global {
 export const auth = (...roles: roles[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const isRefreshTokenRoute =
-        req.path === "/refresh-token" ||
-        req.originalUrl.endsWith("/refresh-token");
-
       const currentSessionToken =
         req.cookies["better-auth.session_token"] ||
         req.cookies["_Secure-better-auth.session_token"];
@@ -53,14 +49,14 @@ export const auth = (...roles: roles[]) => {
       }
 
       const accessToken = cookieUtils.getCookie(req, "accessToken");
-      if (!accessToken && !isRefreshTokenRoute) {
+      if (!accessToken) {
         throw new AppError("unauthorized", 401);
       }
 
       if (accessToken) {
         const verifiedToken = jwtUtils.verifyToken(accessToken);
 
-        if (!verifiedToken.success && !isRefreshTokenRoute) {
+        if (!verifiedToken.success) {
           throw new AppError("unauthorized", 401);
         }
       }
@@ -74,11 +70,7 @@ export const auth = (...roles: roles[]) => {
 
       next();
     } catch (error: any) {
-      console.log(error);
-      res.status(error.status || 500).json({
-        message: error.message || "Internal Server Error",
-        success: false,
-      });
+      throw new AppError(error.message, error.statusCode);
     }
   };
 };

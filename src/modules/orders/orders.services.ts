@@ -37,9 +37,9 @@ const newOrder = async (data: CreateOrderInput, cart_id: string) => {
       });
 
       await Promise.all(
-        data.order_items.map((item) => {
+        data.order_items.map(async (item) => {
           try {
-            return tx.medicine.update({
+            return await tx.medicine.update({
               where: {
                 id: item.product_id,
                 stock: {
@@ -147,6 +147,11 @@ const getSellersOrder = async (seller_id: string, query: IQueryParams) => {
           },
         },
         order_items: {
+          where: {
+            product: {
+              seller_id: seller_id,
+            },
+          },
           include: {
             product: {
               select: {

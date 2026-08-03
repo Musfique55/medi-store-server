@@ -13,12 +13,8 @@ routes.get(
 );
 routes.post("/login", authRateLimiter, authController.login);
 routes.post("/register", authRateLimiter, authController.register);
-routes.post("/verify-email", authRateLimiter, authController.verifyEmailOtp);
+// routes.post("/verify-email", authRateLimiter, authController.verifyEmailOtp);
 routes.post("/logout", authController.logout);
-routes.post(
-  "/refresh-token",
-  auth(roles.ADMIN, roles.SELLER, roles.CUSTOMER),
-  authController.newRefreshToken,
-);
+routes.post("/refresh-token", authController.newRefreshToken);
 
 export const authRoutes = routes;

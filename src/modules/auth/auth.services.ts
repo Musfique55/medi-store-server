@@ -108,32 +108,32 @@ const register = async ({
   };
 };
 
-const verifyEmailOtp = async (email: string, otp: string) => {
-  const session = await auth.api.verifyEmailOTP({
-    body: {
-      email,
-      otp,
-    },
-  });
+// const verifyEmailOtp = async (email: string, otp: string) => {
+//   const session = await auth.api.verifyEmailOTP({
+//     body: {
+//       email,
+//       otp,
+//     },
+//   });
 
-  const tokenPayload = {
-    id: session.user.id,
-    email: session.user.email,
-    name: session.user.name,
-    role: session.user.role,
-    status: session.user.status,
-    emailVerified: session.user.emailVerified,
-  };
+//   const tokenPayload = {
+//     id: session.user.id,
+//     email: session.user.email,
+//     name: session.user.name,
+//     role: session.user.role,
+//     status: session.user.status,
+//     emailVerified: session.user.emailVerified,
+//   };
 
-  const accessToken = jwtUtils.createToken(tokenPayload);
-  const refreshToken = jwtUtils.createToken(tokenPayload);
+//   const accessToken = jwtUtils.createToken(tokenPayload);
+//   const refreshToken = jwtUtils.createToken(tokenPayload);
 
-  return {
-    ...session,
-    accessToken,
-    refreshToken,
-  };
-};
+//   return {
+//     ...session,
+//     accessToken,
+//     refreshToken,
+//   };
+// };
 
 const logout = async (sessionToken: string) => {
   const session = await auth.api.signOut({
@@ -145,6 +145,10 @@ const logout = async (sessionToken: string) => {
 };
 
 const newRefreshToken = async (refreshToken: string, sessionToken: string) => {
+  if (!refreshToken || !sessionToken) {
+    throw new AppError("Unauthorized", 401);
+  }
+
   const session = await prisma.session.findUnique({
     where: {
       token: sessionToken,
@@ -155,19 +159,19 @@ const newRefreshToken = async (refreshToken: string, sessionToken: string) => {
   });
 
   if (!session) {
-    throw new AppError("Invalid session token", 401);
+    throw new AppError("Unauthorized", 401);
   }
 
   const MAX_LIFE = 30 * 24 * 60 * 60 * 1000;
 
   if (Date.now() >= session.createdAt.getTime() + MAX_LIFE) {
-    throw new AppError("Session token expired", 401);
+    throw new AppError("Unauthorized", 401);
   }
 
   const verifyRefreshToken = jwtUtils.verifyToken(refreshToken);
 
   if (!verifyRefreshToken) {
-    throw new AppError("Invalid refresh token", 401);
+    throw new AppError("Unauthorized", 401);
   }
 
   const verifyRefreshTokenData = jwtUtils.decodeToken(
@@ -208,6 +212,6 @@ export const authServices = {
   login,
   register,
   logout,
-  verifyEmailOtp,
+  // verifyEmailOtp,
   newRefreshToken,
 };
