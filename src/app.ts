@@ -38,7 +38,7 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "http://localhost:3000",
     credentials: true,
   }),
 );
@@ -54,7 +54,11 @@ cron.schedule("*/10 * * * *", async () => {
 });
 
 app.get("/", (req, res) => {
-  res.status(200).send("hello");
+  res.status(200).json({
+    status: "success",
+    message: "Medical E-commerce Backend is running",
+    time: new Date().toISOString(),
+  });
 });
 
 app.get("/sentry-debug", (req, res) => {

@@ -20,6 +20,8 @@ export interface IQueryResult<T> {
 
 export interface IQueryParams {
   searchTerm?: string;
+  minPrice?: string;
+  maxPrice?: string;
   page?: string;
   limit?: string;
   sortBy?: string;

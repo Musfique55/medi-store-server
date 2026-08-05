@@ -9,6 +9,7 @@ import {
   getOrSetCache,
   invalidateCache,
 } from "../../utils/redisUtils";
+import { Medicine } from "../../generated/prisma/client";
 
 const createMedicine: RequestHandler = async (req, res) => {
   try {
@@ -30,15 +31,12 @@ const createMedicine: RequestHandler = async (req, res) => {
 
 const getMedicines: RequestHandler = async (req, res) => {
   try {
-    const isSellerView = req.originalUrl.includes("/seller");
     const queryParams: IQueryParams = req.query;
 
-    const key = buildQueryParamsCacheKey("medicine", queryParams, isSellerView);
-    const result = await getOrSetCache(
-      key,
-      medicineServices.getMedicines(isSellerView, queryParams),
+    const key = buildQueryParamsCacheKey("medicine", queryParams);
+    const result = await getOrSetCache(key, () =>
+      medicineServices.getMedicines(queryParams),
     );
-
     sendResponse(res, {
       data: result.data,
       meta: result.meta,
@@ -83,8 +81,7 @@ const getSellersMedicine = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user?.id as string;
   const queryParams: IQueryParams = req.query;
   const key = buildQueryParamsCacheKey("medicine", queryParams, true);
-  const result = await getOrSetCache(
-    key,
+  const result = await getOrSetCache(key, () =>
     medicineServices.getSellersMedicine(queryParams, userId),
   );
   sendResponse(res, {
@@ -125,8 +122,7 @@ const getMedicine: RequestHandler = async (req, res) => {
       isSellerView,
     );
 
-    const result = await getOrSetCache(
-      key,
+    const result = await getOrSetCache(key, () =>
       medicineServices.getMedicine(slug as string),
     );
 
@@ -173,7 +169,9 @@ const deleteMedicine: RequestHandler = async (req, res) => {
 const topMedicines: RequestHandler = async (req, res) => {
   try {
     const key = "medicine:top";
-    const result = await getOrSetCache(key, medicineServices.topMedicines());
+    const result = await getOrSetCache(key, () =>
+      medicineServices.topMedicines(),
+    );
     sendResponse(res, {
       message: "top medicines fetched successfully",
       success: true,

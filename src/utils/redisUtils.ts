@@ -23,15 +23,19 @@ const buildQueryParamsCacheKey = (
   return `${key}:${isSellerView ? "seller" : "customer"}${JSON.stringify(sorted)}`;
 };
 
-const getOrSetCache = async (key: string, cb: Promise<any>) => {
+const getOrSetCache = async <T>(
+  key: string,
+  cb: () => Promise<T>,
+  seconds: number = 3600,
+): Promise<T> => {
   try {
-    let result;
+    let result: T;
     const value = await redisClient.get(key);
     if (value) {
-      result = JSON.stringify(value);
+      result = JSON.parse(value);
     } else {
-      result = await cb;
-      redisClient.set(key, JSON.stringify(result), { EX: 3600 });
+      result = await cb();
+      await redisClient.set(key, JSON.stringify(result), { EX: seconds });
     }
 
     return result;

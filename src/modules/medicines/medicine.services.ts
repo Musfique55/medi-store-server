@@ -1,4 +1,4 @@
-import { Medicine } from "../../generated/prisma/client";
+import { Medicine, Prisma } from "../../generated/prisma/client";
 import {
   MedicineInclude,
   MedicineWhereInput,
@@ -49,58 +49,118 @@ const createMedicine = async (data: Medicine) => {
   }
 };
 
-const getMedicines = async (
-  isSellerView: boolean,
-  queryParams: IQueryParams,
-) => {
+const getMedicines = async (queryParams: IQueryParams) => {
   try {
-    const baseOmits = {
-      seller_id: true,
-      category_id: true,
-      manufacturer_id: true,
+    const conditions: Prisma.Sql[] = [];
+
+    if (queryParams?.searchTerm) {
+      const searchPattern = `%${queryParams.searchTerm}%`;
+      conditions.push(
+        Prisma.sql`("medicine".name ILIKE ${searchPattern} OR "medicine".description ILIKE ${searchPattern})`,
+      );
+    }
+
+    if (queryParams?.category || queryParams?.category_id) {
+      const pattern = `%${queryParams.category}%`;
+      const id = queryParams.category_id;
+      conditions.push(
+        Prisma.sql`("cat".category_name ILIKE ${pattern} OR "cat".slug ILIKE ${pattern} OR "cat".id = ${id})`,
+      );
+    }
+
+    if (queryParams?.manufacturer || queryParams?.manufacturer_id) {
+      const pattern = `%${queryParams.manufacturer}%`;
+      const id = queryParams.manufacturer_id;
+      conditions.push(
+        Prisma.sql`("manu".name ILIKE ${pattern} OR "manu".description ILIKE ${pattern} OR "manu".id = ${id})`,
+      );
+    }
+
+    if (queryParams?.minPrice && queryParams?.maxPrice) {
+      const min = Number(queryParams.minPrice || 0);
+      const max = Number(queryParams.maxPrice);
+      conditions.push(
+        Prisma.sql`("medicine".retails_price >= ${min} AND "medicine".retails_price <= ${max})`,
+      );
+    }
+
+    if (queryParams?.maxPrice) {
+      const max = Number(queryParams.maxPrice);
+      conditions.push(Prisma.sql`("medicine".retails_price <= ${max})`);
+    }
+
+    if (queryParams?.minPrice) {
+      const min = Number(queryParams.minPrice);
+      conditions.push(Prisma.sql`("medicine".retails_price >= ${min})`);
+    }
+
+    if (queryParams?.stock) {
+      conditions.push(Prisma.sql`("medicine".stock >= ${queryParams.stock})`);
+    }
+
+    const whereClause =
+      conditions.length > 0
+        ? Prisma.join(conditions, " AND ")
+        : Prisma.sql`1=1`;
+
+    const [data, count] = await Promise.all([
+      prisma.$queryRaw<Medicine[]>`
+      WITH ranked_products AS (
+        SELECT 
+        "medicine".*,
+        "cat".category_name as category_name,
+        "manu".name as manufacturer_name,
+        (ROW_NUMBER() OVER(
+          PARTITION BY seller_id
+          ORDER BY "medicine".created_at DESC
+        ))::INT as seller_ranks
+        FROM "medicine"
+        LEFT JOIN "category" AS "cat" ON "cat"."id" = "medicine"."category_id"
+        LEFT JOIN "manufacturer" AS "manu" ON "manu"."id" = "medicine"."manufacturer_id"
+        WHERE ${whereClause}
+      )
+      SELECT 
+      id,
+      name,
+      description,
+      retails_price,
+      image_url,
+      created_at,
+      updated_at,
+      stock,
+      discount_type,
+      discount_value,
+      purchase_price,
+      slug,
+      is_featured,
+      reserved_stock,
+      is_active,
+      category_name,
+      manufacturer_name
+      FROM ranked_products
+      ORDER BY seller_ranks ASC, created_at DESC
+      LIMIT ${Number(queryParams.limit) || 10} 
+      OFFSET ${(Number(queryParams.page || 1) - 1) * (Number(queryParams.limit) || 10)}
+    `,
+      prisma.$queryRaw<
+        { total: number }[]
+      >`SELECT COUNT(*)::INT as total FROM "medicine"
+        LEFT JOIN "category" AS "cat" ON "cat"."id" = "medicine"."category_id"
+        LEFT JOIN "manufacturer" AS "manu" ON "manu"."id" = "medicine"."manufacturer_id"
+       WHERE ${whereClause}`,
+    ]);
+
+    return {
+      data,
+      meta: {
+        page: queryParams.page || 1,
+        limit: queryParams.limit || 10,
+        total: count[0]?.total || 0,
+        totalPages: Math.ceil(
+          (count[0]?.total || 1) / (Number(queryParams.limit) || 10),
+        ),
+      },
     };
-
-    const queryBuilder = new QueryBuilder<
-      Medicine,
-      MedicineWhereInput,
-      MedicineInclude
-    >(prisma.medicine, queryParams, {
-      searchableFields: ["name", "description"],
-      filterableFields: [
-        "stock",
-        "is_featured",
-        "retails_price",
-        "manufacturer.name",
-      ],
-    });
-
-    const result = await queryBuilder
-      .search()
-      .filter()
-      .include({
-        category: {
-          select: {
-            category_name: true,
-            slug: true,
-          },
-        },
-        manufacturer: {
-          select: {
-            name: true,
-          },
-        },
-        seller: isSellerView,
-        reviews: {
-          select: {
-            rating: true,
-          },
-        },
-      })
-      .omit(isSellerView ? baseOmits : { ...baseOmits, purchase_price: true })
-      .paginate()
-      .execute();
-
-    return result;
   } catch (error) {
     throw error;
   }

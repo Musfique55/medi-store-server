@@ -33,8 +33,6 @@ const seedAdmin = async () => {
       body: JSON.stringify(adminData),
     });
 
-    console.log(signAdmin);
-
     if (signAdmin.ok) {
       await prisma.user.update({
         where: {
