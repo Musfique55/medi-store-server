@@ -60,6 +60,11 @@ const getMedicines = async (queryParams: IQueryParams) => {
       );
     }
 
+    if (queryParams?.isFeatured) {
+      const val = JSON.parse(queryParams.isFeatured);
+      conditions.push(Prisma.sql`("medicine".is_featured = ${val})`);
+    }
+
     if (queryParams?.category || queryParams?.category_id) {
       const pattern = `%${queryParams.category}%`;
       const id = queryParams.category_id;
@@ -76,22 +81,22 @@ const getMedicines = async (queryParams: IQueryParams) => {
       );
     }
 
-    if (queryParams?.minPrice && queryParams?.maxPrice) {
-      const min = Number(queryParams.minPrice || 0);
-      const max = Number(queryParams.maxPrice);
-      conditions.push(
-        Prisma.sql`("medicine".retails_price >= ${min} AND "medicine".retails_price <= ${max})`,
-      );
-    }
-
-    if (queryParams?.maxPrice) {
-      const max = Number(queryParams.maxPrice);
-      conditions.push(Prisma.sql`("medicine".retails_price <= ${max})`);
-    }
-
-    if (queryParams?.minPrice) {
-      const min = Number(queryParams.minPrice);
-      conditions.push(Prisma.sql`("medicine".retails_price >= ${min})`);
+    if (
+      queryParams?.retails_price &&
+      typeof queryParams.retails_price === "object"
+    ) {
+      if (queryParams.retails_price.gte !== undefined) {
+        const gteVal = Number(queryParams.retails_price.gte);
+        if (!isNaN(gteVal)) {
+          conditions.push(Prisma.sql`("medicine".retails_price >= ${gteVal})`);
+        }
+      }
+      if (queryParams.retails_price.lte !== undefined) {
+        const lteVal = Number(queryParams.retails_price.lte);
+        if (!isNaN(lteVal)) {
+          conditions.push(Prisma.sql`("medicine".retails_price <= ${lteVal})`);
+        }
+      }
     }
 
     if (queryParams?.stock) {
@@ -125,8 +130,6 @@ const getMedicines = async (queryParams: IQueryParams) => {
       description,
       retails_price,
       image_url,
-      created_at,
-      updated_at,
       stock,
       discount_type,
       discount_value,
@@ -136,7 +139,11 @@ const getMedicines = async (queryParams: IQueryParams) => {
       reserved_stock,
       is_active,
       category_name,
-      manufacturer_name
+      manufacturer_name,
+      seller_ranks,
+      seller_id,
+      created_at,
+      updated_at
       FROM ranked_products
       ORDER BY seller_ranks ASC, created_at DESC
       LIMIT ${Number(queryParams.limit) || 10} 

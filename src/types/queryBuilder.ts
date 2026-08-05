@@ -20,8 +20,19 @@ export interface IQueryResult<T> {
 
 export interface IQueryParams {
   searchTerm?: string;
+  category?: string;
+  category_id?: string;
+  manufacturer?: string;
+  manufacturer_id?: string;
+  retails_price?: {
+    gte?: string | number;
+    lte?: string | number;
+    gt?: string | number;
+    lt?: string | number;
+  };
   minPrice?: string;
   maxPrice?: string;
+  stock?: string | number;
   page?: string;
   limit?: string;
   sortBy?: string;
