@@ -9,7 +9,6 @@ import {
   getOrSetCache,
   invalidateCache,
 } from "../../utils/redisUtils";
-import { Medicine } from "../../generated/prisma/client";
 
 const createMedicine: RequestHandler = async (req, res) => {
   try {

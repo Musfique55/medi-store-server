@@ -45,11 +45,25 @@ const getOrSetCache = async <T>(
 };
 
 const invalidateCache = async (pattern: string) => {
-  for await (const key of redisClient.scanIterator({
-    MATCH: pattern,
-    COUNT: 100,
-  })) {
-    await redisClient.del(key);
+  try {
+    const keys: string[] = [];
+    for await (const key of redisClient.scanIterator({
+      MATCH: pattern,
+      COUNT: 100,
+    })) {
+      if (typeof key === "string" && key) {
+        keys.push(key);
+      } else if (Array.isArray(key) && key?.length) {
+        keys.push(...(key as string[]).filter(Boolean));
+      }
+
+      if (keys.length > 0) {
+        await redisClient.del(keys);
+      }
+    }
+  } catch (error) {
+    console.error("Redis invalidateCache Error:", error);
+    throw error;
   }
 };
 

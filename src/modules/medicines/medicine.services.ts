@@ -1,3 +1,4 @@
+import { nanoid } from "nanoid";
 import { Medicine, Prisma } from "../../generated/prisma/client";
 import {
   MedicineInclude,
@@ -5,43 +6,48 @@ import {
 } from "../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
 import { IQueryParams } from "../../types/queryBuilder";
-import { generateUniqueSlug } from "../../utils/generateUniqueSlug";
 import { QueryBuilder } from "../../utils/queryBuilder";
 
 const createMedicine = async (data: Medicine) => {
   const { name } = data;
-  const uniqueSlug = generateUniqueSlug(name);
+  const uniqueSlug = name.split(" ").join("-") + nanoid(10);
   try {
-    const medicine = await prisma.$transaction(async (tx) => {
-      const medicineData = await tx.medicine.create({
-        data: {
-          ...data,
-          slug: uniqueSlug,
-        },
-      });
-      await tx.category.update({
-        where: {
-          id: data.category_id,
-        },
-        data: {
-          product_count: {
-            increment: 1,
+    const medicine = await prisma.$transaction(
+      async (tx) => {
+        const medicineData = await tx.medicine.create({
+          data: {
+            ...data,
+            slug: uniqueSlug,
           },
-        },
-      });
-      await tx.manufacturer.update({
-        where: {
-          id: data.manufacturer_id,
-        },
-        data: {
-          medicine_count: {
-            increment: 1,
+        });
+        await tx.category.update({
+          where: {
+            id: data.category_id,
           },
-        },
-      });
+          data: {
+            product_count: {
+              increment: 1,
+            },
+          },
+        });
+        await tx.manufacturer.update({
+          where: {
+            id: data.manufacturer_id,
+          },
+          data: {
+            medicine_count: {
+              increment: 1,
+            },
+          },
+        });
 
-      return medicineData;
-    });
+        return medicineData;
+      },
+      {
+        maxWait: 5000,
+        timeout: 10000,
+      },
+    );
 
     return medicine;
   } catch (error) {
@@ -61,7 +67,7 @@ const getMedicines = async (queryParams: IQueryParams) => {
     }
 
     if (queryParams?.isFeatured) {
-      const val = JSON.parse(queryParams.isFeatured);
+      const val = JSON.parse(queryParams.isFeatured as string);
       conditions.push(Prisma.sql`("medicine".is_featured = ${val})`);
     }
 
@@ -169,6 +175,7 @@ const getMedicines = async (queryParams: IQueryParams) => {
       },
     };
   } catch (error) {
+    console.log(error);
     throw error;
   }
 };

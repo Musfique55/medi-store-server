@@ -22,7 +22,8 @@ const getUsers: RequestHandler = async (req, res) => {
 
 const updateUsersStatus: RequestHandler = async (req, res) => {
   try {
-    const { id, status } = req.body;
+    const id = req.params.id as string;
+    const { status } = req.body;
     const result = await userServices.updateUserStatus(id, status);
     sendResponse(res, {
       data: result,

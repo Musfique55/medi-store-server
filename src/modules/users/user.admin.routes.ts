@@ -5,7 +5,11 @@ import { roles } from "../../generated/prisma/enums";
 
 const router = Router();
 
-router.get("/",auth(roles.ADMIN),userController.getUsers);
-router.post("/update-status",auth(roles.ADMIN),userController.updateUsersStatus);
+router.get("/", auth(roles.ADMIN), userController.getUsers);
+router.patch(
+  `/:id/update-status`,
+  auth(roles.ADMIN),
+  userController.updateUsersStatus,
+);
 
 export const userAdminRoutes = router;
