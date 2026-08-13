@@ -1,0 +1,16 @@
+model Review {
+    id          String   @id @default(uuid())
+    author_id   String
+    author      User     @relation(fields: [author_id], references: [id])
+    catalog_id  String
+    catalog     Catalog  @relation(fields: [catalog_id], references: [id])
+    order_id    String   @unique
+    Order       Order    @relation(fields: [order_id], references: [id])
+    description String
+    image_url   String[]
+    rating      Int
+    created_at  DateTime @default(now())
+
+    @@index([id, catalog_id])
+    @@map("review")
+}

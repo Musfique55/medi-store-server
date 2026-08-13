@@ -1,0 +1,57 @@
+enum OrderStatus {
+    PENDING
+    CONFIRMED
+    SHIPPED
+    DELIVERED
+    CANCELLED
+    RETURNED
+}
+
+enum DeliveryMethods {
+    COD
+    ONLINE
+}
+
+enum PaymentStatus {
+    PENDING
+    COMPLETED
+}
+
+model Order {
+    id           String @id @unique @default(uuid())
+    order_number String @unique
+    customer_id  String
+
+    subtotal        Decimal @db.Decimal(10, 2)
+    total_amount    Decimal @db.Decimal(10, 2)
+    discount_amount Decimal @default(0.00)
+    tax             Decimal @db.Decimal(10, 2)
+
+    order_status    OrderStatus     @default(PENDING)
+    payment_status  PaymentStatus   @default(PENDING)
+    delivery_method DeliveryMethods @default(COD)
+
+    shipping_address Json
+    created_at       DateTime     @default(now())
+    updated_at       DateTime     @updatedAt
+    order_items      OrderItems[]
+    reviews          Review[]
+
+    @@index([customer_id, order_number])
+    @@map("order")
+}
+
+model OrderItems {
+    id           String   @id @unique @default(uuid())
+    order_id     String
+    Order        Order    @relation(fields: [order_id], references: [id], onDelete: Cascade)
+    catalog_id   String
+    catalog_name String
+    quantity     Int
+    unit_price   Decimal  @db.Decimal(10, 2)
+    total        Decimal  @db.Decimal(10, 2)
+    created_at   DateTime @default(now())
+
+    @@index([order_id, catalog_id])
+    @@map("order_items")
+}

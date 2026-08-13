@@ -17,7 +17,7 @@ const createCart = async (cartId: string, product: any, quantity: number) => {
       });
     }
 
-    const medProduct = await prisma.medicine.findUnique({
+    const medProduct = await prisma.catalog.findUnique({
       where: {
         id: product?.product_id,
       },
@@ -50,7 +50,7 @@ const createCart = async (cartId: string, product: any, quantity: number) => {
             },
           },
         });
-        await tx.medicine.update({
+        await tx.catalog.update({
           where: {
             id: product.product_id,
           },
@@ -79,7 +79,7 @@ const createCart = async (cartId: string, product: any, quantity: number) => {
           },
         });
 
-        await tx.medicine.update({
+        await tx.catalog.update({
           where: {
             id: product.product_id,
           },
@@ -149,7 +149,7 @@ const removeProductFromCart = async (productId: string, cartId: string) => {
 
     if (cart.items.length === 1) {
       return await prisma.$transaction(async (tx) => {
-        await tx.medicine.update({
+        await tx.catalog.update({
           where: {
             id: productId,
           },
@@ -182,7 +182,7 @@ const removeProductFromCart = async (productId: string, cartId: string) => {
     }
 
     const res = await prisma.$transaction(async (tx) => {
-      await tx.medicine.update({
+      await tx.catalog.update({
         where: {
           id: productId,
         },
@@ -222,7 +222,7 @@ const updateQuantityFromCart = async (
   try {
     let res;
     if (quantity > 0) {
-      const product = await prisma.medicine.findUnique({
+      const product = await prisma.catalog.findUnique({
         where: {
           id: productId,
         },
@@ -263,7 +263,7 @@ const updateQuantityFromCart = async (
             },
           });
 
-          await tx.medicine.update({
+          await tx.catalog.update({
             where: {
               id: productId,
             },
@@ -293,7 +293,7 @@ const updateQuantityFromCart = async (
               },
             },
           });
-          await tx.medicine.update({
+          await tx.catalog.update({
             where: {
               id: productId,
             },
@@ -429,7 +429,7 @@ const clearExpiredCart = async () => {
         });
 
         for (const item of cart.items) {
-          await tx.medicine.update({
+          await tx.catalog.update({
             where: {
               id: item.product_id,
             },

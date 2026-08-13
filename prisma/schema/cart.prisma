@@ -1,0 +1,26 @@
+model Cart {
+    id         String      @id @default(uuid())
+    createdAt  DateTime    @default(now())
+    updatedAt  DateTime    @updatedAt
+    reservedAt DateTime    @default(now())
+    expiresAt  DateTime
+    items      CartItems[]
+
+    @@index([id])
+    @@map("cart")
+}
+
+model CartItems {
+    id         String  @id @default(uuid())
+    cart_id    String
+    cart       Cart    @relation(fields: [cart_id], references: [id], onDelete: Cascade)
+    quantity   Int     @default(1)
+    price      Decimal @db.Decimal(10, 2)
+    product_id String
+    name       String
+    image      String?
+
+    @@unique([product_id, cart_id])
+    @@index([id, cart_id])
+    @@map("cart_items")
+}

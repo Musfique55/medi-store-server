@@ -1,0 +1,18 @@
+model Category {
+    id            String    @id @default(uuid())
+    author_id     String
+    author        User      @relation(fields: [author_id], references: [id], onDelete: Cascade)
+    category_name String    @unique @db.VarChar(50)
+    description   String?   @db.VarChar(500)
+    icon_url      String?
+    slug          String    @unique
+    catalog_count Int       @default(0)
+    is_active     Boolean   @default(true)
+    catalogs      Catalog[]
+
+    created_at DateTime @default(now())
+    updated_at DateTime @updatedAt
+
+    @@index([id])
+    @@map("category")
+}

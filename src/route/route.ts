@@ -13,6 +13,7 @@ import { categoryAdminRoutes } from "../modules/categories/category.admin.routes
 import { manufacturerAdminRoutes } from "../modules/manufacturer/manufacturer.admin.route";
 import { sellerMedicineRoutes } from "../modules/medicines/medicine.seller.routes";
 import { sellerAnalyticsRoutes } from "../modules/seller/seller.routes";
+import { inventoryRoutes } from "@/modules/inventories/inventories.routes";
 
 const routes = Router();
 
@@ -37,5 +38,6 @@ routes.use("/cart", cartRoutes);
 routes.use("/seller/medicines", sellerMedicineRoutes);
 routes.use("/seller/orders", sellerOrderRoutes);
 routes.use("/seller/analytics", sellerAnalyticsRoutes);
+routes.use("/inventories", inventoryRoutes);
 
 export const routeHandlers = routes;

@@ -1,55 +1,43 @@
-import { nanoid } from "nanoid";
-import { Medicine, Prisma } from "../../generated/prisma/client";
-import {
-  MedicineInclude,
-  MedicineWhereInput,
-} from "../../generated/prisma/models";
-import { prisma } from "../../lib/prisma";
 import { IQueryParams } from "../../types/queryBuilder";
 import { QueryBuilder } from "../../utils/queryBuilder";
+import { prisma } from "../../lib/prisma";
+import { Prisma } from "../../generated/prisma/client";
+import { Catalog } from "./medicine.schema";
+import { v4 as uuid } from "uuid";
+import {
+  CatalogInclude,
+  CatalogWhereInput,
+} from "../../generated/prisma/models";
 
-const createMedicine = async (data: Medicine) => {
+const createMedicine = async (data: Catalog) => {
   const { name } = data;
-  const uniqueSlug = name.split(" ").join("-") + nanoid(10);
+  const uniqueSlug = name.split(" ").join("-") + "-" + uuid().slice(0, 8);
+  const productId = uuid();
+  const inventoryId = uuid();
   try {
-    const medicine = await prisma.$transaction(
-      async (tx) => {
-        const medicineData = await tx.medicine.create({
-          data: {
-            ...data,
-            slug: uniqueSlug,
-          },
-        });
-        await tx.category.update({
-          where: {
-            id: data.category_id,
-          },
-          data: {
-            product_count: {
-              increment: 1,
-            },
-          },
-        });
-        await tx.manufacturer.update({
-          where: {
-            id: data.manufacturer_id,
-          },
-          data: {
-            medicine_count: {
-              increment: 1,
-            },
-          },
-        });
+    const [product] = await prisma.$transaction([
+      // product data
+      prisma.catalog.create({
+        data: {
+          ...data,
+          slug: uniqueSlug,
+          id: productId,
+          inventory_id: inventoryId,
+        },
+      }),
 
-        return medicineData;
-      },
-      {
-        maxWait: 5000,
-        timeout: 10000,
-      },
-    );
+      // inventory data
+      prisma.inventory.create({
+        data: {
+          id: inventoryId,
+          catalog_id: productId,
+          quantity: 0,
+          seller_id: data.seller_id,
+        },
+      }),
+    ]);
 
-    return medicine;
+    return product;
   } catch (error) {
     throw error;
   }
@@ -115,7 +103,7 @@ const getMedicines = async (queryParams: IQueryParams) => {
         : Prisma.sql`1=1`;
 
     const [data, count] = await Promise.all([
-      prisma.$queryRaw<Medicine[]>`
+      prisma.$queryRaw<Catalog[]>`
       WITH ranked_products AS (
         SELECT 
         "medicine".*,
@@ -186,10 +174,10 @@ const getSellersMedicine = async (
 ) => {
   try {
     const queryBuilder = new QueryBuilder<
-      Medicine,
-      MedicineWhereInput,
-      MedicineInclude
-    >(prisma.medicine, queryParams, {
+      Catalog,
+      CatalogWhereInput,
+      CatalogInclude
+    >(prisma.catalog, queryParams, {
       searchableFields: ["name", "description"],
       filterableFields: [
         "stock",
@@ -231,7 +219,7 @@ const getSellersMedicine = async (
 
 const updateStocks = async (id: string, { stock }: { stock: number }) => {
   try {
-    const updatedStock = await prisma.medicine.update({
+    const updatedStock = await prisma.catalog.update({
       where: {
         id,
       },
@@ -248,7 +236,7 @@ const updateStocks = async (id: string, { stock }: { stock: number }) => {
 
 const getMedicine = async (slug: string) => {
   try {
-    const medicine = await prisma.medicine.findUnique({
+    const medicine = await prisma.catalog.findUnique({
       where: {
         slug,
       },
@@ -286,11 +274,11 @@ const getMedicine = async (slug: string) => {
   }
 };
 
-const updateMedicine = async (medicine_id: string, data: Medicine) => {
+const updateMedicine = async (medicine_id: string, data: any) => {
   try {
     const { id, seller_id, stock, ...remainingFields } = data;
 
-    const updatedMedicine = await prisma.medicine.update({
+    const updatedMedicine = await prisma.catalog.update({
       where: {
         id: medicine_id,
       },
@@ -305,7 +293,7 @@ const updateMedicine = async (medicine_id: string, data: Medicine) => {
 
 const deleteMedicine = async (id: string) => {
   try {
-    const deleted = await prisma.medicine.delete({
+    const deleted = await prisma.catalog.delete({
       where: {
         id,
       },
@@ -319,9 +307,9 @@ const deleteMedicine = async (id: string) => {
 const topMedicines = async () => {
   try {
     const topItems = await prisma.orderItems.groupBy({
-      by: ["product_id"],
+      by: ["catalog_id"],
       _count: {
-        product_id: true,
+        catalog_id: true,
         order_id: true,
       },
       _sum: {
@@ -333,9 +321,9 @@ const topMedicines = async () => {
       take: 10,
     });
 
-    const medicineIds = topItems.map((item) => item.product_id);
+    const medicineIds = topItems.map((item) => item.catalog_id);
 
-    const medicines = await prisma.medicine.findMany({
+    const medicines = await prisma.catalog.findMany({
       where: {
         id: {
           in: medicineIds,
@@ -354,7 +342,7 @@ const topMedicines = async () => {
     const medicineMap = new Map(medicines.map((item) => [item.id, item]));
 
     const result = topItems.map((item) => ({
-      ...medicineMap.get(item.product_id),
+      ...medicineMap.get(item.catalog_id),
       totalSold: item._sum.quantity,
       totalOrders: item._count.order_id,
     }));

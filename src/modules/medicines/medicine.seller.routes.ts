@@ -4,15 +4,18 @@ import { roles } from "../../generated/prisma/enums";
 import { medicineController } from "./medicine.controller";
 import { multerStorage } from "../../config/multer";
 import { productImageUploadMiddleware } from "../../middleware/productImageUploadMiddleware";
+import { requestValidator } from "../../middleware/requestValidator";
+import { catalogCreateDTO } from "./medicine.schema";
 
 const router = Router();
 
 router.get("/", auth(roles.SELLER), medicineController.getSellersMedicine);
 router.post(
   "/",
-  //   auth(roles.SELLER),
+  auth(roles.SELLER),
   multerStorage.array("files", 5),
   productImageUploadMiddleware,
+  requestValidator(catalogCreateDTO),
   medicineController.createMedicine,
 );
 router.patch("/:id/stock", auth(roles.SELLER), medicineController.updateStocks);

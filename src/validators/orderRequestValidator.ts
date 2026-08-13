@@ -41,10 +41,10 @@ export const orderRequestValidator =
       result.data.customer_id = req.user?.id;
       result.data.order_number = generateOrderNumber;
 
-      const dbProducts = await prisma.medicine.findMany({
+      const dbProducts = await prisma.catalog.findMany({
         where: {
           id: {
-            in: cart.map((item) => item.product_id),
+            in: cart.map((item) => item.catalog_id),
           },
         },
         select: {
@@ -67,7 +67,7 @@ export const orderRequestValidator =
       }
 
       for (const product of dbProducts) {
-        const cartItem = cart.find((item) => item.product_id === product.id);
+        const cartItem = cart.find((item) => item.catalog_id === product.id);
 
         if (!cartItem) {
           continue;

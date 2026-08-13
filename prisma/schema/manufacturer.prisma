@@ -1,0 +1,16 @@
+model Manufacturer {
+    id             String   @id @default(uuid())
+    name           String
+    description    String
+    logo_url       String?
+    country        String
+    is_active      Boolean
+    medicine_count Int      @default(0)
+    created_at     DateTime @default(now())
+    updated_at     DateTime @updatedAt
+
+    catalogs Catalog[]
+
+    @@index([id, name])
+    @@map("manufacturer")
+}

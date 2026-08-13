@@ -23,11 +23,14 @@ const newOrder = async (data: CreateOrderInput, cart_id: string) => {
           shipping_address: data.shipping_address,
           payment_status: data.payment_status as PaymentStatus,
           delivery_method: data.delivery_method as DeliveryMethods,
+          tax: data.tax,
           order_items: {
             create: data.order_items.map((item) => ({
-              product_id: item.product_id,
+              catalog_id: item.catalog_id,
+              catalog_name: item.catalog_name,
               quantity: item.quantity,
               unit_price: new Prisma.Decimal(item.unit_price),
+              total: new Prisma.Decimal(item.unit_price * item.quantity),
             })),
           },
         },
@@ -39,9 +42,9 @@ const newOrder = async (data: CreateOrderInput, cart_id: string) => {
       await Promise.all(
         data.order_items.map(async (item) => {
           try {
-            return await tx.medicine.update({
+            return await tx.catalog.update({
               where: {
-                id: item.product_id,
+                id: item.catalog_id,
                 stock: {
                   gte: item.quantity,
                 },
@@ -53,7 +56,7 @@ const newOrder = async (data: CreateOrderInput, cart_id: string) => {
               },
             });
           } catch (error) {
-            throw new Error(`FAILED_PRODUCT_${item.product_id}`);
+            throw new Error(`FAILED_PRODUCT_${item.catalog_id}`);
           }
         }),
       );
@@ -82,17 +85,7 @@ const getAllOrders = async (query: IQueryParams) => {
         filterableFields: ["order_status", "delivery_method", "payment_status"],
       },
     );
-    const data = await queryBuilder
-      .include({
-        customer: true,
-      })
-      .omit({
-        customer_id: true,
-      })
-      .search()
-      .filter()
-      .paginate()
-      .execute();
+    const data = await queryBuilder.search().filter().paginate().execute();
 
     return data;
   } catch (error) {
@@ -119,63 +112,32 @@ const updateOrderStatus = async (id: string, status: OrderStatus) => {
 
 const getSellersOrder = async (seller_id: string, query: IQueryParams) => {
   try {
-    const queryBuilder = new QueryBuilder<Order, OrderWhereInput, OrderInclude>(
-      prisma.order,
-      query,
-      {
-        searchableFields: ["customer_id", "order_items.product.name"],
-        filterableFields: ["order_status", "delivery_method", "payment_status"],
-      },
-    );
-    const result = await queryBuilder
-      .where({
-        order_items: {
-          some: {
-            product: {
-              seller_id: seller_id,
-            },
-          },
-        },
-      })
-      .include({
-        customer: {
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            phone: true,
-          },
-        },
-        order_items: {
-          where: {
-            product: {
-              seller_id: seller_id,
-            },
-          },
-          include: {
-            product: {
-              select: {
-                id: true,
-                name: true,
-                description: true,
-                image_url: true,
-                retails_price: true,
-                purchase_price: true,
-                discount_type: true,
-                discount_value: true,
-              },
-            },
-          },
-        },
-      })
-      .omit({
-        customer_id: true,
-      })
-      .search()
-      .filter()
-      .paginate()
-      .execute();
-
+    // const queryBuilder = new QueryBuilder<Order, OrderWhereInput, OrderInclude>(
+    //   prisma.order,
+    //   query,
+    //   {
+    //     searchableFields: ["customer_id", "order_items.product.name"],
+    //     filterableFields: ["order_status", "delivery_method", "payment_status"],
+    //   },
+    // );
+    // const result = await queryBuilder
+    //   .where({
+    //     order_items: {
+    //       some: {
+    //         catalog: {
+    //           seller_id: seller_id,
+    //         },
+    //       },
+    //     },
+    //   })
+    //   .omit({
+    //     customer_id: true,
+    //   })
+    //   .search()
+    //   .filter()
+    //   .paginate()
+    //   .execute();
+    const result = {};
     return result;
   } catch (error) {
     throw error;
@@ -194,24 +156,6 @@ const getUserOrders = async (user_id: string, query: IQueryParams) => {
     );
     const data = await queryBuilder
       .where({ customer_id: user_id, order_status: { not: "CANCELLED" } })
-      .include({
-        order_items: {
-          select: {
-            unit_price: true,
-            quantity: true,
-            product: {
-              select: {
-                id: true,
-                name: true,
-                description: true,
-                image_url: true,
-                discount_type: true,
-                discount_value: true,
-              },
-            },
-          },
-        },
-      })
       .omit({
         customer_id: true,
       })
@@ -248,28 +192,6 @@ const getOrderDetails = async (order_id: string, user_id: string) => {
       where: {
         id: order_id,
         customer_id: user_id,
-      },
-      include: {
-        order_items: {
-          include: {
-            product: {
-              select: {
-                id: true,
-                name: true,
-                description: true,
-                image_url: true,
-                retails_price: true,
-              },
-            },
-          },
-          omit: {
-            order_id: true,
-            unit_price: true,
-          },
-        },
-      },
-      omit: {
-        customer_id: true,
       },
     });
 

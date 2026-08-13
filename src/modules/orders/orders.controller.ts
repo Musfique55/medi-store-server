@@ -53,8 +53,8 @@ const getSellersOrder: RequestHandler = async (req, res) => {
       message: "Orders fetched successfully",
       success: true,
       statusCode: 200,
-      data: result.data,
-      meta: result.meta,
+      data: result,
+      // meta: result.meta,
     });
   } catch (error: any) {
     throw new AppError(

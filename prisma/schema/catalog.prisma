@@ -1,0 +1,71 @@
+enum ActionType {
+    IN
+    OUT
+}
+
+enum discountType {
+    NONE
+    PERCENTAGE
+    FIXED
+}
+
+model Catalog {
+    id              String       @id @unique @default(uuid())
+    seller_id       String
+    seller          User         @relation(fields: [seller_id], references: [id])
+    category_id     String
+    category        Category     @relation(fields: [category_id], references: [id], onDelete: Cascade)
+    manufacturer_id String
+    manufacturer    Manufacturer @relation(fields: [manufacturer_id], references: [id], onDelete: Cascade)
+    name            String
+    slug            String       @unique
+    description     String
+    is_featured     Boolean      @default(false)
+    retails_price   Decimal      @db.Decimal(10, 2)
+    purchase_price  Decimal      @db.Decimal(10, 2)
+    discount_type   discountType @default(NONE)
+    discount_value  Int?         @default(0)
+    stock           Int
+    reserved_stock  Int          @default(0)
+    image_url       String[]
+    is_active       Boolean      @default(true)
+    inventory_id    String?
+
+    reviews Review[]
+
+    created_at DateTime @default(now())
+    updated_at DateTime @updatedAt
+
+    @@unique([name, seller_id])
+    @@index([category_id, seller_id])
+    @@map("catalog")
+}
+
+model Inventory {
+    id         String   @id @unique @default(cuid())
+    catalog_id String   @unique
+    seller_id  String
+    quantity   Int
+    created_at DateTime @default(now())
+    updated_at DateTime @updatedAt
+
+    histories History[]
+
+    @@map("inventory")
+}
+
+model History {
+    id               String     @id @unique @default(cuid())
+    last_quantity    Int
+    new_quantity     Int
+    quantity_changed Int
+    action_type      ActionType
+    inventory_id     String
+    inventory        Inventory  @relation(fields: [inventory_id], references: [id], onDelete: Cascade)
+
+    created_at DateTime @default(now())
+    updated_at DateTime @updatedAt
+
+    @@index([inventory_id])
+    @@map("history")
+}

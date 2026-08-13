@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "node --import tsx --watch src/server.ts",
     "seed:admin": "npx tsx src/scripts/index.ts",
-    "build": "prisma generate && prisma migrate deploy && tsup src/server.ts --format esm --platform node --target node20 --outDir dist",
+    "build": "tsc && tsc-alias",
     "start": "node dist/server.js",
     "migrate": "prisma migrate dev",
     "generate": "prisma generate"
@@ -17,6 +17,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@prisma/adapter-neon": "^7.9.1",
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
     "@sentry/node": "^10.57.0",
@@ -37,7 +38,10 @@
     "nodemailer": "^8.0.7",
     "pg": "^8.18.0",
     "redis": "^6.1.0",
-    "tsup": "^8.5.1"
+    "tsc-alias": "^1.9.1",
+    "tsup": "^8.5.1",
+    "uuid": "^14.0.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.10",
